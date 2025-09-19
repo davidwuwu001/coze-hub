@@ -23,6 +23,7 @@ import { getIconByName, getAvailableIcons, iconMap } from '../src/utils/iconMapp
 import { cardStorage } from '../src/utils/cardStorage';
 import DragDropList from '../src/components/DragDropList';
 import IconSelector from '../src/components/IconSelector';
+import ProtectedRoute from '../src/components/ProtectedRoute';
 
 /**
  * 后台管理页面
@@ -198,7 +199,8 @@ export default function AdminPage() {
   );
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
       {/* 顶部导航栏 */}
       <header className="bg-white shadow-sm border-b">
         <div className="px-4 py-3 flex items-center justify-between">
@@ -469,6 +471,7 @@ export default function AdminPage() {
         onSelect={handleIconSelect}
         onClose={() => setIsIconSelectorOpen(false)}
       />
-    </div>
+      </div>
+    </ProtectedRoute>
   );
 }

@@ -1,14 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
-  
-  // 输出配置，适用于静态导出
-  output: 'export',
-  trailingSlash: true,
   
   // 图片配置
   images: {
+    domains: ['localhost'],
     unoptimized: true
   },
   

@@ -5,6 +5,7 @@ import SearchBar from '../src/components/SearchBar';
 import HeroBanner from '../src/components/HeroBanner';
 import FeatureGrid from '../src/components/FeatureGrid';
 import BottomNavigation from '../src/components/BottomNavigation';
+import ProtectedRoute from '../src/components/ProtectedRoute';
 import { cardStorage } from '../src/utils/cardStorage';
 import { FeatureCardData } from '../src/types';
 
@@ -82,12 +83,14 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header onAdminClick={handleAdminClick} />
-      <SearchBar />
-      <HeroBanner />
-      <FeatureGrid cards={featureCards} />
-      <BottomNavigation />
-    </div>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gray-50">
+        <Header onAdminClick={handleAdminClick} />
+        <SearchBar />
+        <HeroBanner />
+        <FeatureGrid cards={featureCards} />
+        <BottomNavigation />
+      </div>
+    </ProtectedRoute>
   );
 }
