@@ -26,8 +26,6 @@
     }
   ],
   "env": {
-    "DATABASE_URL": "@database_url",
-    "JWT_SECRET": "@jwt_secret",
     "JWT_EXPIRES_IN": "24h",
     "NEXT_PUBLIC_APP_NAME": "AI获客智能体平台"
   }
