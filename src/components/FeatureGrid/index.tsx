@@ -6,6 +6,8 @@ import FeatureCard from '../FeatureCard';
  * 功能卡片数据接口
  */
 export interface FeatureCardData {
+  /** 卡片ID */
+  id?: string;
   /** 功能名称 */
   name: string;
   /** 功能描述 */
@@ -14,6 +16,12 @@ export interface FeatureCardData {
   icon: LucideIcon;
   /** 背景颜色类名 */
   bgColor: string;
+  /** 是否启用工作流 */
+  workflowEnabled?: boolean;
+  /** 工作流ID */
+  workflowId?: string;
+  /** 工作流参数 */
+  workflowParams?: string;
 }
 
 /**
@@ -47,14 +55,17 @@ export default function FeatureGrid({ cards, onCardClick }: FeatureGridProps) {
     <div className="px-4 py-6">
       <div className="max-w-md mx-auto">
         <div className="grid grid-cols-2 gap-4">
-          {cards.map((card) => (
+          {cards.map((card, index) => (
             <FeatureCard
-              key={card.id}
+              key={card.id || index}
               name={card.name}
               desc={card.desc}
               icon={card.icon}
               bgColor={card.bgColor}
-              onClick={() => onCardClick?.(card)}
+              workflowEnabled={card.workflowEnabled}
+              workflowId={card.workflowId}
+              workflowParams={card.workflowParams}
+              onClick={() => onCardClick?.(card, index)}
             />
           ))}
         </div>

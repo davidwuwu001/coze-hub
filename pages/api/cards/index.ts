@@ -47,7 +47,7 @@ interface CardResponse {
 
 /**
  * 获取功能卡片数据API接口
- * GET /api/cards - 获取卡片数据，按order_index排序
+ * GET /api/cards - 获取卡片数据，按sort_order排序
  * 查询参数：
  * - admin: 'true' 时返回所有卡片（包括禁用的），否则只返回启用的卡片
  * 需要用户认证
@@ -100,7 +100,7 @@ export default async function handler(
     const whereClause = isAdminMode ? '' : 'WHERE enabled = 1';
     const cards = await executeQuery(
       `SELECT id, name, description, icon, background_color, sort_order, enabled, created_at, updated_at,
-              workflow_id, workflow_params, workflow_enabled
+              workflow_id, api_key, workflow_enabled
        FROM feature_cards 
        ${whereClause} 
        ORDER BY sort_order ASC, id ASC`
@@ -117,14 +117,7 @@ export default async function handler(
       order: card.sort_order,
       enabled: card.enabled,
       workflowId: card.workflow_id,
-      workflowParams: card.workflow_params ? (() => {
-        try {
-          return JSON.parse(card.workflow_params);
-        } catch (e) {
-          console.warn('Invalid JSON in workflow_params:', card.workflow_params);
-          return null;
-        }
-      })() : null,
+      apiKey: card.api_key,
       workflowEnabled: card.workflow_enabled,
       createdAt: card.created_at?.toISOString(),
       updatedAt: card.updated_at?.toISOString()

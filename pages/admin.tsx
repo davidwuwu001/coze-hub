@@ -24,7 +24,8 @@ import {
   CreditCard,
   UserPlus,
   UserMinus,
-  Award
+  Award,
+  Play
 } from 'lucide-react';
 import { FeatureCardData, AdminPageState, CardActionType, IconName } from '../src/types';
 import { getIconByName, getAvailableIcons, iconMap } from '../src/utils/iconMapping';
@@ -153,6 +154,14 @@ function AdminPage() {
     loadUsers();
     loadPointsData();
   }, []);
+
+  // 监控editingCard变化
+  useEffect(() => {
+    console.log('editingCard状态变化:', editingCard);
+    console.log('name字段:', editingCard.name, '是否为空:', !editingCard.name);
+    console.log('desc字段:', editingCard.desc, '是否为空:', !editingCard.desc);
+    console.log('保存按钮应该禁用:', !editingCard.name || !editingCard.desc);
+  }, [editingCard]);
   
   // 返回首页
   const handleGoBack = () => {
@@ -187,7 +196,7 @@ function AdminPage() {
       order: cards.length,
       enabled: true,
       workflowId: '',
-      workflowParams: '{}',
+      apiKey: '',
       workflowEnabled: false
     });
   };
@@ -303,6 +312,10 @@ function AdminPage() {
   
   // 编辑卡片
   const handleEditCard = (card: FeatureCardData) => {
+    console.log('🎯 handleEditCard被调用 - 原始卡片数据:', card);
+    console.log('🎯 卡片name:', card.name, '类型:', typeof card.name);
+    console.log('🎯 卡片desc:', card.desc, '类型:', typeof card.desc);
+    console.log('🎯 设置state.showAddDialog为true');
     setState(prev => ({ 
       ...prev, 
       isEditing: true, 
@@ -310,6 +323,8 @@ function AdminPage() {
       showAddDialog: true 
     }));
     setEditingCard({ ...card });
+    console.log('🎯 设置editingCard后:', { ...card });
+    console.log('🎯 handleEditCard执行完成');
   };
 
   /**
@@ -449,10 +464,17 @@ function AdminPage() {
    * 保存编辑的卡片
    */
   const handleSaveEditingCard = async () => {
+    console.log('🚀 handleSaveEditingCard函数开始执行');
+    console.log('📝 当前editingCard:', editingCard);
+    console.log('🔍 验证字段 - name:', editingCard.name, 'desc:', editingCard.desc);
+    
     if (!editingCard.name || !editingCard.desc) {
+      console.log('❌ 验证失败：缺少必填字段');
       setMessage({ type: 'error', text: '请填写完整的卡片信息' });
       return;
     }
+    
+    console.log('✅ 字段验证通过，开始保存流程');
     
     try {
       const token = localStorage.getItem('token');
@@ -469,13 +491,15 @@ function AdminPage() {
         order: editingCard.order || 0,
         enabled: editingCard.enabled !== false,
         workflowId: editingCard.workflowId || '',
-        workflowParams: editingCard.workflowParams || '{}',
+        apiKey: editingCard.apiKey || '',
         workflowEnabled: editingCard.workflowEnabled || false
       };
 
       let response;
       if (state.editingCardId) {
         // 更新现有卡片
+        console.log('🔄 更新现有卡片，ID:', state.editingCardId);
+        console.log('📤 发送数据:', { id: state.editingCardId, ...cardData });
         response = await fetch('/api/cards/update', {
           method: 'PUT',
           headers: {
@@ -486,6 +510,8 @@ function AdminPage() {
         });
       } else {
         // 添加新卡片
+        console.log('➕ 添加新卡片');
+        console.log('📤 发送数据:', cardData);
         response = await fetch('/api/cards/create', {
           method: 'POST',
           headers: {
@@ -496,7 +522,12 @@ function AdminPage() {
         });
       }
 
+      console.log('📡 API响应状态:', response.status);
+      const responseData = await response.json();
+      console.log('📥 API响应数据:', responseData);
+      
       if (response.ok) {
+        console.log('✅ API调用成功');
         // 重新加载卡片数据
         await loadCards();
         
@@ -509,11 +540,14 @@ function AdminPage() {
         }));
         setEditingCard({});
         setMessage({ type: 'success', text: '卡片保存成功' });
+        console.log('🎉 保存流程完成');
       } else if (response.status === 401) {
+        console.log('🔒 认证失败');
         setMessage({ type: 'error', text: '认证失败，请重新登录' });
         localStorage.removeItem('token');
         router.push('/auth/login');
       } else {
+        console.log('❌ 保存失败，状态码:', response.status);
         setMessage({ type: 'error', text: '保存卡片失败' });
       }
     } catch (error) {
@@ -734,8 +768,23 @@ function AdminPage() {
                                 >
                                   {card.enabled ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                                 </button>
+                                {card.workflowEnabled && (
+                                  <button
+                                    onClick={() => {
+                                      // 启动工作流的逻辑
+                                      console.log('启动工作流:', card.workflowId, card.apiKey);
+                                    }}
+                                    className="p-1 text-purple-600 hover:bg-purple-50 rounded"
+                                    title="启动工作流"
+                                  >
+                                    <Play className="w-4 h-4" />
+                                  </button>
+                                )}
                                 <button
-                                  onClick={() => handleEditCard(card)}
+                                  onClick={() => {
+                                    console.log('🎯 编辑按钮被点击，卡片ID:', card.id);
+                                    handleEditCard(card);
+                                  }}
                                   className="p-1 text-blue-600 hover:bg-blue-50 rounded"
                                   title="编辑"
                                 >
@@ -926,11 +975,19 @@ function AdminPage() {
         </div>
       </div>
       
-      {/* 编辑对话框 */}
+      {/* 编辑卡片对话框 */}
       {state.showAddDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-            <div className="flex items-center justify-between mb-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={(e) => {
+          console.log('🎯 对话框背景点击');
+          if (e.target === e.currentTarget) {
+            console.log('🎯 点击了背景，关闭对话框');
+          }
+        }}>
+          <div className="bg-white rounded-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col" onClick={(e) => {
+            console.log('🎯 对话框内容点击');
+            e.stopPropagation();
+          }}>
+            <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-lg font-semibold">
                 {state.editingCardId ? '编辑卡片' : '添加卡片'}
               </h2>
@@ -942,7 +999,8 @@ function AdminPage() {
               </button>
             </div>
             
-            <div className="space-y-4">
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-4">
               {/* 卡片名称 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -1065,35 +1123,29 @@ function AdminPage() {
                   </div>
                 )}
                 
-                {/* 工作流参数 */}
+                {/* API密钥 */}
                 {editingCard.workflowEnabled && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      工作流参数（JSON格式）
+                      API密钥
                     </label>
-                    <textarea
-                      value={editingCard.workflowParams ? JSON.stringify(editingCard.workflowParams, null, 2) : ''}
-                      onChange={(e) => {
-                        try {
-                          const params = e.target.value ? JSON.parse(e.target.value) : null;
-                          setEditingCard(prev => ({ ...prev, workflowParams: params }));
-                        } catch (error) {
-                          // 保持原值，等用户输入完整的JSON
-                        }
-                      }}
+                    <input
+                      type="password"
+                      value={editingCard.apiKey || ''}
+                      onChange={(e) => setEditingCard(prev => ({ ...prev, apiKey: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder='{"key": "value"}'
-                      rows={4}
+                      placeholder="请输入API密钥"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      请输入有效的JSON格式参数，例如：{'{"timeout": 30, "retries": 3}'}
+                      请输入用于调用工作流的API密钥
                     </p>
                   </div>
                 )}
+                </div>
               </div>
             </div>
             
-            <div className="flex items-center justify-end space-x-3 mt-6">
+            <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50">
               <button
                 onClick={handleCancelEdit}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -1101,8 +1153,30 @@ function AdminPage() {
                 取消
               </button>
               <button
-                onClick={handleSaveEditingCard}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                onClick={(e) => {
+                  console.log('🔥🔥🔥 保存按钮点击事件触发！');
+                  console.log('🔥 editingCard:', editingCard);
+                  console.log('🔥 name值:', editingCard.name);
+                  console.log('🔥 desc值:', editingCard.desc);
+                  console.log('🔥 按钮disabled属性:', e.currentTarget.disabled);
+                  console.log('🔥 事件对象:', e);
+                  
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  // 强制执行保存，忽略禁用状态
+                  console.log('🚀 强制执行保存操作');
+                  handleSaveEditingCard();
+                }}
+                onMouseDown={(e) => {
+                  console.log('🖱️ 鼠标按下事件触发');
+                }}
+                onMouseUp={(e) => {
+                  console.log('🖱️ 鼠标抬起事件触发');
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer relative z-50"
+                type="button"
+                style={{ pointerEvents: 'auto', position: 'relative', zIndex: 9999 }}
               >
                 保存
               </button>

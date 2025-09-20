@@ -15,16 +15,16 @@ export default async function handler(
   }
 
   try {
-    const { id, name, desc, iconName, bgColor, order, enabled, workflowId, workflowParams, workflowEnabled } = req.body;
+    const { id, name, desc, iconName, bgColor, order, enabled, workflowId, apiKey, workflowEnabled } = req.body;
 
     // 验证必填字段
     if (!id || !name || !desc || !iconName) {
       return res.status(400).json({ error: '缺少必填字段' });
     }
 
-    // 验证工作流参数格式
-    if (workflowParams && typeof workflowParams !== 'object') {
-      return res.status(400).json({ error: '工作流参数必须是有效的JSON对象' });
+    // 验证API密钥格式
+    if (apiKey && typeof apiKey !== 'string') {
+      return res.status(400).json({ error: 'API密钥必须是字符串' });
     }
 
     const connection = await createConnection();
@@ -33,10 +33,10 @@ export default async function handler(
     const [result] = await connection.execute(
       `UPDATE feature_cards 
        SET name = ?, description = ?, icon = ?, background_color = ?, sort_order = ?, enabled = ?, 
-           workflow_id = ?, workflow_params = ?, workflow_enabled = ?, updated_at = NOW()
+           workflow_id = ?, api_key = ?, workflow_enabled = ?, updated_at = NOW()
        WHERE id = ?`,
       [name, desc, iconName, bgColor, order, enabled, workflowId || null, 
-       workflowParams ? JSON.stringify(workflowParams) : null, workflowEnabled || 0, id]
+       apiKey || null, workflowEnabled || 0, id]
     );
 
     await connection.end();
@@ -55,7 +55,7 @@ export default async function handler(
       order,
       enabled,
       workflowId,
-      workflowParams,
+      apiKey,
       workflowEnabled,
       updatedAt: new Date().toISOString()
     };

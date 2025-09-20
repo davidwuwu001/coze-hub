@@ -23,8 +23,8 @@ export interface FeatureCardData {
   enabled: boolean;
   /** 工作流ID */
   workflowId?: string;
-  /** 工作流参数配置 */
-  workflowParams?: Record<string, any>;
+  /** API密钥 */
+  apiKey?: string;
   /** 是否启用工作流 */
   workflowEnabled?: boolean;
   /** 创建时间 */

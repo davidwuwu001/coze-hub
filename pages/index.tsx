@@ -81,7 +81,10 @@ export default function Home() {
                 name: card.name,
                 desc: card.desc,
                 icon: iconMap[card.iconName] || FileText,
-                bgColor: card.bgColor
+                bgColor: card.bgColor,
+                workflowEnabled: card.workflowEnabled || false,
+                workflowId: card.workflowId || '',
+                apiKey: card.apiKey || ''
               }));
               console.log('✅ API数据转换完成，卡片数量:', formattedCards.length);
               setCards(formattedCards);

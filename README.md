@@ -185,6 +185,23 @@ git push
 
 ## 开发日志
 
+### v3.2.2 - 工作流参数字段重构
+- ✅ 数据库字段重构
+  - 移除 workflow_params 字段，替换为 api_key 字段
+  - 执行数据库迁移脚本，更新表结构
+  - 添加 api_key 字段的索引优化
+- ✅ 前端界面更新
+  - 移除编辑对话框中的工作流参数配置输入框
+  - 添加API密钥配置输入框（密码类型）
+  - 更新保存逻辑，使用 apiKey 字段替代 workflowParams
+- ✅ API接口更新
+  - 更新 /api/cards/index.ts 查询字段为 api_key
+  - 更新 create.ts 和 update.ts 使用 apiKey 字段
+  - 修复所有相关的数据转换逻辑
+- ✅ 类型定义更新
+  - 更新 FeatureCardData 接口，将 workflowParams 替换为 apiKey
+  - 修复所有相关文件中的字段引用
+
 ### v3.2.1 - API字段名修复
 - ✅ 修复数据库字段名不匹配问题
   - 统一使用 icon、background_color、sort_order 字段名
