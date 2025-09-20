@@ -77,6 +77,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, loading, error, onClear
     }
   };
 
+  /**
+   * 处理忘记密码点击事件
+   */
+  const handleForgotPassword = () => {
+    // 这里可以添加忘记密码的逻辑
+    // 比如跳转到忘记密码页面或显示重置密码对话框
+    window.location.href = '/auth/forgot-password';
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* 全局错误提示 */}
@@ -178,9 +187,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, loading, error, onClear
           </label>
         </div>
         <div className="text-sm">
-          <a href="#" className="font-medium text-blue-600 hover:text-blue-500 transition-colors">
+          <button 
+            type="button"
+            onClick={handleForgotPassword}
+            className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+          >
             忘记密码？
-          </a>
+          </button>
         </div>
       </div>
 

@@ -108,7 +108,7 @@ export default async function handler(
     // 更新用户信息
     await executeQuery(
       'UPDATE users SET username = ?, email = ?, phone = ?, avatar = ?, updated_at = NOW() WHERE id = ?',
-      [username, email, phone, avatar || null, userId]
+      [username, email, phone, avatar ?? null, userId]
     );
     
     // 获取更新后的用户信息

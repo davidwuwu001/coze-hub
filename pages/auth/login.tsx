@@ -91,20 +91,7 @@ const LoginPage: React.FC = () => {
         </p>
       </motion.div>
       
-      {/* 演示提示 */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.5 }}
-        className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
-      >
-        <h4 className="text-sm font-medium text-blue-900 mb-2">演示提示</h4>
-        <div className="text-xs text-blue-700 space-y-1">
-          <p>• 支持用户名、邮箱或手机号登录</p>
-          <p>• 可以选择记住登录状态</p>
-          <p>• 注册时需要使用邀请码：1212 或 7777</p>
-        </div>
-      </motion.div>
+
     </AuthLayout>
   );
 };

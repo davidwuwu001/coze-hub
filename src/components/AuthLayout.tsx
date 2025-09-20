@@ -77,15 +77,7 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children, title, subtitle }) =>
           </motion.div>
         </motion.div>
 
-        {/* 底部装饰 */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8, duration: 0.5 }}
-          className="text-center mt-6 text-sm text-gray-500"
-        >
-          <p>© 2024 复刻小程序设计. 保留所有权利.</p>
-        </motion.div>
+
       </div>
     </div>
   );

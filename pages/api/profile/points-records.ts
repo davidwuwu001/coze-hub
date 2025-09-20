@@ -49,7 +49,7 @@ export default async function handler(
        WHERE user_id = ? 
        ORDER BY created_at DESC 
        LIMIT ? OFFSET ?`,
-      [userId, limit, offset]
+      [userId, limit ?? 20, offset ?? 0]
     );
     
     // 获取总记录数
