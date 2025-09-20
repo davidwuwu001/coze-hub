@@ -1,5 +1,4 @@
 import { FeatureCardData, CardConfig } from '../types';
-import { getIconByName } from './iconMapping';
 import {
   Mic,
   Image,
@@ -16,6 +15,35 @@ import {
   Newspaper,
   Target
 } from 'lucide-react';
+
+/**
+ * 图标名称到组件的映射表
+ */
+const iconMap: Record<string, any> = {
+  Mic,
+  Image,
+  FileText,
+  Monitor,
+  BarChart3,
+  Hash,
+  User,
+  Video,
+  BookOpen,
+  MessageCircle,
+  Volume2,
+  TrendingUp,
+  Newspaper,
+  Target
+};
+
+/**
+ * 根据图标名称获取图标组件
+ * @param iconName 图标名称
+ * @returns 图标组件
+ */
+const getIconByName = (iconName: string) => {
+  return iconMap[iconName] || FileText;
+};
 
 /**
  * 本地存储键名

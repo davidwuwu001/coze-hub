@@ -82,6 +82,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   bgColor,
   onClick
 }) => {
+  console.log('🎴 FeatureCard渲染:', { name, desc, IconComponent: !!IconComponent, bgColor });
   return (
     <div 
       className="bg-white rounded-xl p-4 cursor-pointer transform transition-all duration-300 hover:scale-105 hover:-translate-y-1"

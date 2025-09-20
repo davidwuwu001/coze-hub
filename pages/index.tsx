@@ -14,6 +14,7 @@ import ProtectedRoute from '../src/components/ProtectedRoute';
 import { FeatureCardData } from '../src/types';
 import { useAuth } from '../src/hooks/useAuth';
 import { toast } from 'sonner';
+import { cardStorage } from '../src/utils/cardStorage';
 
 /**
  * 图标映射表
@@ -50,10 +51,16 @@ export default function Home() {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
+      console.log('🔍 开始加载卡片数据');
+      console.log('🔍 Token存在:', !!token);
+      console.log('🔍 Token内容:', token ? token.substring(0, 20) + '...' : 'null');
+      console.log('🔍 用户登录状态:', !!user);
+      console.log('🔍 用户信息:', user);
       
       // 如果有token，尝试从API获取数据
       if (token) {
         try {
+          console.log('📡 尝试从API获取卡片数据...');
           const response = await fetch('/api/cards', {
             method: 'GET',
             headers: {
@@ -62,8 +69,10 @@ export default function Home() {
             }
           });
 
+          console.log('📡 API响应状态:', response.status);
           if (response.ok) {
             const result = await response.json();
+            console.log('📡 API响应数据:', result);
             
             if (result.success && result.data) {
               // 转换API数据格式为组件需要的格式
@@ -74,22 +83,29 @@ export default function Home() {
                 icon: iconMap[card.iconName] || FileText,
                 bgColor: card.bgColor
               }));
+              console.log('✅ API数据转换完成，卡片数量:', formattedCards.length);
               setCards(formattedCards);
               return; // 成功获取API数据，直接返回
             }
+          } else {
+            console.log('❌ API请求失败:', response.status);
           }
         } catch (apiError) {
           // API获取失败，静默回退到localStorage
-          console.log('API获取失败，使用本地数据');
+          console.log('❌ API获取失败，使用本地数据:', apiError);
         }
+      } else {
+        console.log('⚠️ 没有token，使用本地数据');
       }
       
       // 如果没有token或API失败，使用localStorage数据
-      const savedCards = await getCards();
+      console.log('💾 从localStorage获取卡片数据...');
+      const savedCards = cardStorage.getCards();
+      console.log('💾 localStorage卡片数量:', savedCards.length);
       setCards(savedCards);
     } catch (error) {
       // 静默处理加载错误，使用默认数据
-      console.log('使用默认卡片数据');
+      console.log('❌ 加载卡片数据出错:', error);
     } finally {
       setLoading(false);
     }
@@ -153,7 +169,6 @@ export default function Home() {
       case 'home':
         return (
           <>
-            <Header onAdminClick={handleAdminClick} />
             <SearchBar />
             <HeroBanner />
             <FeatureGrid cards={cards} />
@@ -161,7 +176,7 @@ export default function Home() {
         );
       case 'discover':
         return (
-          <div className="pt-16 pb-20 px-4">
+          <div className="px-4">
             <div className="max-w-md mx-auto">
               <h1 className="text-2xl font-bold text-gray-900 mb-6">发现</h1>
               <div className="bg-white rounded-lg shadow-sm p-6 text-center">
@@ -175,7 +190,6 @@ export default function Home() {
       default:
         return (
           <>
-            <Header onAdminClick={handleAdminClick} />
             <SearchBar />
             <HeroBanner />
             <FeatureGrid cards={cards} />

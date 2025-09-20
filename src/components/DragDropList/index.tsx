@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FeatureCardData } from '../../types';
 import { GripVertical, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { getIconByName } from '../../utils/iconMapping';
 
 interface DragDropListProps {
   items: FeatureCardData[];
@@ -202,7 +203,7 @@ const DragDropList: React.FC<DragDropListProps> = ({
   return (
     <div className="space-y-3">
       {items.map((item, index) => {
-        const IconComponent = item.icon;
+        const IconComponent = getIconByName(item.iconName);
         
         return (
           <div

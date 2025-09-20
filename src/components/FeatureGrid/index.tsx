@@ -31,24 +31,34 @@ interface FeatureGridProps {
  * 以每行两列的布局展示功能卡片
  * 响应式设计，在移动端保持两列布局
  */
-const FeatureGrid: React.FC<FeatureGridProps> = ({ cards, onCardClick }) => {
+export default function FeatureGrid({ cards, onCardClick }: FeatureGridProps) {
+  if (cards.length === 0) {
+    return (
+      <div className="px-4 py-8">
+        <div className="max-w-md mx-auto text-center">
+          <p className="text-gray-500 mb-4">暂无卡片</p>
+          <p className="text-sm text-gray-400">点击"添加卡片"按钮来创建第一个卡片</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="px-4 mb-20">
-      {/* 每行两列的网格布局 */}
-      <div className="grid grid-cols-2 gap-3">
-        {cards.map((card, index) => (
-          <FeatureCard
-            key={index}
-            name={card.name}
-            desc={card.desc}
-            icon={card.icon}
-            bgColor={card.bgColor}
-            onClick={() => onCardClick?.(card, index)}
-          />
-        ))}
+    <div className="px-4 py-6">
+      <div className="max-w-md mx-auto">
+        <div className="grid grid-cols-2 gap-4">
+          {cards.map((card) => (
+            <FeatureCard
+              key={card.id}
+              name={card.name}
+              desc={card.desc}
+              icon={card.icon}
+              bgColor={card.bgColor}
+              onClick={() => onCardClick?.(card)}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
-};
-
-export default FeatureGrid;
+}
