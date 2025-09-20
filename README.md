@@ -185,6 +185,20 @@ git push
 
 ## 开发日志
 
+### v3.2.1 - API字段名修复
+- ✅ 修复数据库字段名不匹配问题
+  - 统一使用 icon、background_color、sort_order 字段名
+  - 修复 /api/cards/index.ts 中的SQL查询字段名
+  - 修复 create.ts、update.ts、reorder.ts 中的字段名映射
+  - 修复 config.ts 中的字段名和查询逻辑
+- ✅ 修复测试脚本和工具
+  - 修复 scripts/check-database.js 中的字段名
+  - 更新测试脚本使用正确的JWT密钥
+- ✅ 增强错误处理
+  - 添加 workflow_params 的JSON解析错误处理
+  - 改善API错误响应和日志记录
+- ✅ 完整的API功能测试，所有接口现在正常工作
+
 ### v3.2.0 - 工作流功能集成
 - ✅ 数据库表结构扩展，添加工作流相关字段
   - workflow_id: 工作流ID字段
