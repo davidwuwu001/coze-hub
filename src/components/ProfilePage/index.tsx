@@ -3,6 +3,7 @@ import { User, Camera, CreditCard, LogOut, Lock, Edit, Gift, History, ChevronRig
 import { useAuth } from '../../hooks/useAuth';
 import { User as UserType, UpdateProfileData, PointsRecord, PasswordResetData } from '../../types/auth';
 import { cn } from '../../lib/utils';
+import { AvatarSelector, Avatar } from '../Avatar';
 
 export interface ProfilePageProps {
   className?: string;
@@ -80,17 +81,12 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ className }) => {
           <div className="flex items-center space-x-4">
             {/* 头像 */}
             <div className="relative">
-              {user.avatar ? (
-                <img
-                  src={user.avatar}
-                  alt="用户头像"
-                  className="w-16 h-16 rounded-full border-4 border-white/30"
-                />
-              ) : (
-                <div className="w-16 h-16 bg-white/20 rounded-full border-4 border-white/30 flex items-center justify-center">
-                  <User className="w-8 h-8 text-white" />
-                </div>
-              )}
+              <Avatar
+                username={user.username}
+                avatarType={user.avatar}
+                size={64}
+                className="border-4 border-white/30"
+              />
               <button
                 onClick={() => setShowEditModal(true)}
                 className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white"
@@ -234,6 +230,13 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClose }) =>
   const [error, setError] = useState('');
 
   /**
+   * 处理头像选择
+   */
+  const handleAvatarSelect = (avatarData: string) => {
+    setFormData({ ...formData, avatar: avatarData });
+  };
+
+  /**
    * 处理表单提交
    */
   const handleSubmit = async (e: React.FormEvent) => {
@@ -242,13 +245,21 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClose }) =>
     setError('');
 
     try {
+      // 确保发送的数据不包含undefined值
+      const submitData = {
+        username: formData.username || '',
+        phone: formData.phone || '',
+        email: formData.email || '',
+        avatar: formData.avatar && formData.avatar.trim() !== '' ? formData.avatar : null,
+      };
+
       const response = await fetch('/api/profile/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       const data = await response.json();
@@ -288,14 +299,12 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ user, onClose }) =>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                头像URL
+                选择头像
               </label>
-              <input
-                type="url"
-                value={formData.avatar}
-                onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="请输入头像URL"
+              <AvatarSelector
+                username={formData.username}
+                selectedAvatarId={formData.avatar}
+                onSelect={handleAvatarSelect}
               />
             </div>
 

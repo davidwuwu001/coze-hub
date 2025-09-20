@@ -47,7 +47,7 @@ export default async function handler(
 
     // 查询用户
     const users = await executeQuery(
-      `SELECT id, username, email, phone, password_hash, invite_code, created_at, updated_at, is_active 
+      `SELECT id, username, email, phone, avatar, points, password_hash, invite_code, created_at, updated_at, is_active 
        FROM users 
        WHERE ${whereClause} AND is_active = TRUE`,
       [identifier]
@@ -78,6 +78,8 @@ export default async function handler(
       username: user.username,
       email: user.email,
       phone: user.phone,
+      avatar: user.avatar,
+      points: user.points || 0,
       invite_code: user.invite_code,
       created_at: user.created_at,
       updated_at: user.updated_at,

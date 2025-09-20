@@ -64,6 +64,7 @@ function AdminPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [editingUser, setEditingUser] = useState<any>({});
   const [showUserDialog, setShowUserDialog] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   // 积分数据
   const [pointsData, setPointsData] = useState<any[]>([]);
@@ -113,13 +114,27 @@ function AdminPage() {
       const token = localStorage.getItem('token');
       if (!token) return;
 
-      // 模拟用户数据，实际项目中应该从API获取
-      const mockUsers = [
-        { id: '1', username: 'admin', email: 'admin@example.com', role: 'admin', status: 'active', createdAt: '2024-01-01', points: 1000 },
-        { id: '2', username: 'user1', email: 'user1@example.com', role: 'user', status: 'active', createdAt: '2024-01-02', points: 500 },
-        { id: '3', username: 'user2', email: 'user2@example.com', role: 'user', status: 'inactive', createdAt: '2024-01-03', points: 200 }
-      ];
-      setUsers(mockUsers);
+      const response = await fetch('/api/admin/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setUsers(result.data.users || []);
+        } else {
+          setMessage({ type: 'error', text: result.message || '加载用户数据失败' });
+        }
+      } else if (response.status === 401) {
+        setMessage({ type: 'error', text: '权限不足，请确认您是管理员' });
+        localStorage.removeItem('token');
+        router.push('/auth/login');
+      } else {
+        setMessage({ type: 'error', text: '加载用户数据失败' });
+      }
     } catch (error) {
       console.error('加载用户数据失败:', error);
       setMessage({ type: 'error', text: '加载用户数据失败' });
@@ -151,9 +166,15 @@ function AdminPage() {
   // 加载所有数据
   useEffect(() => {
     loadCards();
-    loadUsers();
-    loadPointsData();
-  }, []);
+    // 只在切换到用户管理标签时才加载用户数据
+    if (activeTab === 'users') {
+      loadUsers();
+    }
+    // 只在切换到积分管理标签时才加载积分数据
+    if (activeTab === 'points') {
+      loadPointsData();
+    }
+  }, [activeTab]);
 
   // 监控editingCard变化
   useEffect(() => {
@@ -226,35 +247,104 @@ function AdminPage() {
   /**
    * 删除用户
    */
-  const handleDeleteUser = (userId: string) => {
+  const handleDeleteUser = async (userId: string) => {
     if (!confirm('确定要删除这个用户吗？')) return;
-    setUsers(users.filter(user => user.id !== userId));
-    setMessage({ type: 'success', text: '用户删除成功' });
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setMessage({ type: 'error', text: '请先登录' });
+        return;
+      }
+
+      const response = await fetch(`/api/admin/users?userId=${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setMessage({ type: 'success', text: '用户删除成功' });
+        loadUsers(); // 重新加载用户列表
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: result.message || '删除用户失败' 
+        });
+      }
+    } catch (error) {
+      console.error('删除用户失败:', error);
+      setMessage({ type: 'error', text: '删除用户失败' });
+    }
+
     setTimeout(() => setMessage(null), 3000);
   };
 
   /**
    * 保存用户
    */
-  const handleSaveUser = () => {
+  const handleSaveUser = async () => {
     if (!editingUser.username || !editingUser.email) {
       setMessage({ type: 'error', text: '请填写完整的用户信息' });
       return;
     }
 
-    if (editingUser.id) {
-      // 更新用户
-      setUsers(users.map(user => user.id === editingUser.id ? editingUser : user));
-      setMessage({ type: 'success', text: '用户更新成功' });
-    } else {
-      // 添加新用户
-      const newUser = { ...editingUser, id: Date.now().toString(), createdAt: new Date().toISOString().split('T')[0] };
-      setUsers([...users, newUser]);
-      setMessage({ type: 'success', text: '用户添加成功' });
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setMessage({ type: 'error', text: '请先登录' });
+        return;
+      }
+
+      const isEditing = !!editingUser.id;
+      const url = isEditing 
+        ? `/api/admin/users?userId=${editingUser.id}`
+        : '/api/admin/users';
+      
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: editingUser.username,
+          email: editingUser.email,
+          phone: editingUser.phone,
+          password: editingUser.password,
+          role: editingUser.role,
+          points: editingUser.points,
+          is_active: editingUser.is_active !== false
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setMessage({ 
+          type: 'success', 
+          text: isEditing ? '用户更新成功' : '用户添加成功' 
+        });
+        setShowUserDialog(false);
+        setEditingUser({});
+        loadUsers(); // 重新加载用户列表
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: result.message || '操作失败' 
+        });
+      }
+    } catch (error) {
+      console.error('保存用户失败:', error);
+      setMessage({ type: 'error', text: '保存用户失败' });
     }
 
-    setShowUserDialog(false);
-    setEditingUser({});
     setTimeout(() => setMessage(null), 3000);
   };
 
@@ -847,7 +937,7 @@ function AdminPage() {
                         <tr className="border-b">
                           <th className="text-left py-2 px-3 font-medium text-gray-900">用户名</th>
                           <th className="text-left py-2 px-3 font-medium text-gray-900">邮箱</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-900">角色</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-900">手机号</th>
                           <th className="text-left py-2 px-3 font-medium text-gray-900">状态</th>
                           <th className="text-left py-2 px-3 font-medium text-gray-900">积分</th>
                           <th className="text-left py-2 px-3 font-medium text-gray-900">创建时间</th>
@@ -859,22 +949,16 @@ function AdminPage() {
                           <tr key={user.id} className="border-b hover:bg-gray-50">
                             <td className="py-2 px-3">{user.username}</td>
                             <td className="py-2 px-3">{user.email}</td>
+                            <td className="py-2 px-3">{user.phone || '-'}</td>
                             <td className="py-2 px-3">
                               <span className={`px-2 py-1 rounded-full text-xs ${
-                                user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+                                user.is_active !== false ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                               }`}>
-                                {user.role === 'admin' ? '管理员' : '用户'}
+                                {user.is_active !== false ? '活跃' : '禁用'}
                               </span>
                             </td>
-                            <td className="py-2 px-3">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                user.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>
-                                {user.status === 'active' ? '活跃' : '禁用'}
-                              </span>
-                            </td>
-                            <td className="py-2 px-3">{user.points}</td>
-                            <td className="py-2 px-3">{user.createdAt}</td>
+                            <td className="py-2 px-3">{user.points || 0}</td>
+                            <td className="py-2 px-3">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}</td>
                             <td className="py-2 px-3">
                               <div className="flex items-center space-x-2">
                                 <button
@@ -1164,8 +1248,8 @@ function AdminPage() {
       {/* 用户编辑对话框 */}
       {showUserDialog && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-white rounded-lg w-full max-w-md mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between p-6 border-b">
                 <h2 className="text-lg font-semibold">
                   {editingUser.id ? '编辑用户' : '添加用户'}
                 </h2>
@@ -1177,7 +1261,8 @@ function AdminPage() {
                 </button>
               </div>
               
-              <div className="space-y-4">
+              <div className="flex-1 overflow-y-auto p-6">
+                <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     用户名
@@ -1206,16 +1291,42 @@ function AdminPage() {
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    角色
+                    手机号
                   </label>
-                  <select
-                    value={editingUser.role || 'user'}
-                    onChange={(e) => setEditingUser(prev => ({ ...prev, role: e.target.value }))}
+                  <input
+                    type="tel"
+                    value={editingUser.phone || ''}
+                    onChange={(e) => setEditingUser(prev => ({ ...prev, phone: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="user">用户</option>
-                    <option value="admin">管理员</option>
-                  </select>
+                    placeholder="请输入手机号"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    密码
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={editingUser.password || ''}
+                      onChange={(e) => setEditingUser(prev => ({ ...prev, password: e.target.value }))}
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder={editingUser.id ? "留空则不修改密码" : "请输入密码"}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {editingUser.id && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      留空则不修改当前密码
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -1223,8 +1334,8 @@ function AdminPage() {
                     状态
                   </label>
                   <select
-                    value={editingUser.status || 'active'}
-                    onChange={(e) => setEditingUser(prev => ({ ...prev, status: e.target.value }))}
+                    value={editingUser.is_active !== false ? 'active' : 'inactive'}
+                    onChange={(e) => setEditingUser(prev => ({ ...prev, is_active: e.target.value === 'active' }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="active">活跃</option>
@@ -1245,8 +1356,9 @@ function AdminPage() {
                   />
                 </div>
               </div>
+              </div>
               
-              <div className="flex items-center justify-end space-x-3 mt-6">
+              <div className="flex items-center justify-end space-x-3 p-6 border-t bg-gray-50">
                 <button
                   onClick={() => setShowUserDialog(false)}
                   className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"

@@ -37,8 +37,13 @@ export default async function handler(
       });
     }
 
-    const userId = decoded.id;
+    const userId = decoded.userId;  // 修复：使用正确的字段名 userId
     const { username, email, phone, avatar }: UpdateProfileData = req.body;
+    
+    // 添加调试日志
+    console.log('接收到的请求数据:', { username, email, phone, avatar });
+    console.log('用户ID:', userId);
+    console.log('解码的token内容:', decoded);
     
     // 验证必填字段
     if (!username || !email || !phone) {
@@ -105,10 +110,13 @@ export default async function handler(
       });
     }
     
-    // 更新用户信息
+    // 更新用户信息 - 确保avatar字段正确处理空值
+    const avatarValue = avatar && avatar.trim() !== '' ? avatar : null;
+    console.log('准备更新的参数:', [username, email, phone, avatarValue, userId]);
+    
     await executeQuery(
       'UPDATE users SET username = ?, email = ?, phone = ?, avatar = ?, updated_at = NOW() WHERE id = ?',
-      [username, email, phone, avatar ?? null, userId]
+      [username, email, phone, avatarValue, userId]
     );
     
     // 获取更新后的用户信息

@@ -46,7 +46,7 @@ export default async function handler(
 
     // 从数据库获取最新的用户信息
     const users = await executeQuery(
-      `SELECT id, username, email, phone, invite_code, created_at, updated_at, is_active 
+      `SELECT id, username, email, phone, avatar, points, invite_code, created_at, updated_at, is_active 
        FROM users 
        WHERE id = ? AND is_active = TRUE`,
       [decoded.userId]
@@ -64,6 +64,8 @@ export default async function handler(
       username: users[0].username,
       email: users[0].email,
       phone: users[0].phone,
+      avatar: users[0].avatar,
+      points: users[0].points || 0,
       invite_code: users[0].invite_code,
       created_at: users[0].created_at,
       updated_at: users[0].updated_at,
