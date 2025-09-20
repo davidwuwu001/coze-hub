@@ -26,7 +26,7 @@ export default async function handler(
     
     // 插入新卡片
     const [result] = await connection.execute(
-      `INSERT INTO feature_cards (name, description, icon_name, bg_color, order_index, enabled, workflow_id, workflow_params, workflow_enabled, created_at, updated_at) 
+      `INSERT INTO feature_cards (name, description, icon, background_color, sort_order, enabled, workflow_id, workflow_params, workflow_enabled, created_at, updated_at) 
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [name, desc, iconName, bgColor || 'bg-blue-500', order || 0, enabled !== false, workflowId || '', workflowParams || '{}', workflowEnabled || false]
     );

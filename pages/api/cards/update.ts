@@ -32,7 +32,7 @@ export default async function handler(
     // 更新卡片（包含工作流字段）
     const [result] = await connection.execute(
       `UPDATE feature_cards 
-       SET name = ?, description = ?, icon_name = ?, bg_color = ?, order_index = ?, enabled = ?, 
+       SET name = ?, description = ?, icon = ?, background_color = ?, sort_order = ?, enabled = ?, 
            workflow_id = ?, workflow_params = ?, workflow_enabled = ?, updated_at = NOW()
        WHERE id = ?`,
       [name, desc, iconName, bgColor, order, enabled, workflowId || null, 

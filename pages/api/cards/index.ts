@@ -99,11 +99,11 @@ export default async function handler(
     // 根据管理员模式决定查询条件
     const whereClause = isAdminMode ? '' : 'WHERE enabled = 1';
     const cards = await executeQuery(
-      `SELECT id, name, description, icon_name, bg_color, order_index, enabled, created_at, updated_at,
+      `SELECT id, name, description, icon, background_color, sort_order, enabled, created_at, updated_at,
               workflow_id, workflow_params, workflow_enabled
        FROM feature_cards 
        ${whereClause} 
-       ORDER BY order_index ASC, id ASC`
+       ORDER BY sort_order ASC, id ASC`
     );
 
     // 转换数据格式，添加图标组件和工作流字段
@@ -111,13 +111,20 @@ export default async function handler(
       id: card.id.toString(),
       name: card.name,
       desc: card.description,
-      icon: iconMap[card.icon_name] || FileText, // 默认使用FileText图标
-      iconName: card.icon_name,
-      bgColor: card.bg_color,
-      order: card.order_index,
+      icon: iconMap[card.icon] || FileText, // 默认使用FileText图标
+      iconName: card.icon,
+      bgColor: card.background_color,
+      order: card.sort_order,
       enabled: card.enabled,
       workflowId: card.workflow_id,
-      workflowParams: card.workflow_params ? JSON.parse(card.workflow_params) : null,
+      workflowParams: card.workflow_params ? (() => {
+        try {
+          return JSON.parse(card.workflow_params);
+        } catch (e) {
+          console.warn('Invalid JSON in workflow_params:', card.workflow_params);
+          return null;
+        }
+      })() : null,
       workflowEnabled: card.workflow_enabled,
       createdAt: card.created_at?.toISOString(),
       updatedAt: card.updated_at?.toISOString()

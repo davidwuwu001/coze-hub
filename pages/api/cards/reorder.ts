@@ -31,7 +31,7 @@ export default async function handler(
       for (let i = 0; i < cards.length; i++) {
         const card = cards[i];
         await connection.execute(
-          'UPDATE feature_cards SET order_index = ?, updated_at = NOW() WHERE id = ?',
+          'UPDATE feature_cards SET sort_order = ?, updated_at = NOW() WHERE id = ?',
           [i, card.id]
         );
       }

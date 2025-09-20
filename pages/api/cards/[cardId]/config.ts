@@ -89,19 +89,20 @@ export default async function handler(
 
     // 查询卡片基本信息
     const cardQuery = `
-      SELECT id, title, description, icon, workflow_id
+      SELECT id, name, description, icon, workflow_id
       FROM feature_cards 
-      WHERE id = ? AND status = 'active'
+      WHERE id = ? AND enabled = 1
     `;
     
-    const [cardRows] = await connection.execute(cardQuery, [cardId]);
-    const cards = cardRows as any[];
-    
-    if (cards.length === 0) {
-      return res.status(404).json({ error: '卡片不存在' });
+    const cardRows = await executeQuery(cardQuery, [cardId]);
+    if (cardRows.length === 0) {
+      return res.status(404).json({ 
+        success: false,
+        message: '卡片不存在' 
+      });
     }
     
-    const card = cards[0];
+    const card = cardRows[0];
     
     // 查询输入配置
     let inputConfig;
@@ -114,8 +115,8 @@ export default async function handler(
         ORDER BY field_order ASC
       `;
       
-      const [configRows] = await connection.execute(configQuery, [cardId]);
-      const configs = configRows as any[];
+      const configRows = await executeQuery(configQuery, [cardId]);
+      const configs = configRows;
       
       if (configs.length > 0) {
         // 从数据库读取配置
@@ -185,7 +186,7 @@ export default async function handler(
 
     const responseData = {
       id: card.id.toString(),
-      name: card.title,
+      name: card.name,
       description: card.description,
       workflow_id: card.workflow_id,
       input_configs: inputConfigs

@@ -63,7 +63,7 @@ async function checkDatabase() {
     // 查询所有数据
     console.log('\n所有卡片数据:');
     const [cards] = await connection.execute(
-      "SELECT id, name, description, icon_name, bg_color, order_index, enabled FROM feature_cards ORDER BY order_index ASC"
+      "SELECT id, name, description, icon, background_color, sort_order, enabled FROM feature_cards ORDER BY sort_order ASC"
     );
     console.table(cards);
     
