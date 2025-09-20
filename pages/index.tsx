@@ -190,16 +190,7 @@ export default function Home() {
         <div className="fixed top-0 left-0 right-0 z-50">
           <Header 
             title="CATAIT智媒体运营工具" 
-            onBackClick={() => router.push('/admin')}
-            showBackButton={false}
-            rightContent={
-              <button
-                onClick={handleAdminClick}
-                className="p-2 rounded-lg bg-white/20 hover:bg-white/30 transition-colors"
-              >
-                <Settings className="w-5 h-5 text-white" />
-              </button>
-            }
+            onAdminClick={handleAdminClick}
           />
         </div>
         
