@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { 
-  Settings, FileText, Video, BookOpen, Search, Image, Mic, 
-  Volume2, TrendingUp, Edit, User, BarChart3, Target 
-} from 'lucide-react';
 import Header from '../src/components/Header';
 import SearchBar from '../src/components/SearchBar';
 import HeroBanner from '../src/components/HeroBanner';
@@ -15,28 +11,10 @@ import { FeatureCardData } from '../src/types';
 import { useAuth } from '../src/hooks/useAuth';
 import { toast } from 'sonner';
 import { cardStorage } from '../src/utils/cardStorage';
+import { getIconByName } from '../src/utils/iconMapping';
 
 /**
- * 图标映射表
- * 将数据库中的图标名称映射到实际的Lucide图标组件
- */
-const iconMap: Record<string, any> = {
-  FileText,
-  Video,
-  BookOpen,
-  Search,
-  Image,
-  Mic,
-  Volume2,
-  TrendingUp,
-  Edit,
-  User,
-  BarChart3,
-  Target
-};
-
-/**
- * CATAIT智媒体运营工具主页面
+ * Ai企业获客盈利系统主页面
  * 1:1还原设计稿的UI界面
  */
 export default function Home() {
@@ -80,11 +58,8 @@ export default function Home() {
                 id: card.id,
                 name: card.name,
                 desc: card.desc,
-                icon: iconMap[card.iconName] || FileText,
-                bgColor: card.bgColor,
-                workflowEnabled: card.workflowEnabled || false,
-                workflowId: card.workflowId || '',
-                apiKey: card.apiKey || ''
+                icon: getIconByName(card.iconName),
+                bgColor: card.bgColor
               }));
               console.log('✅ API数据转换完成，卡片数量:', formattedCards.length);
               setCards(formattedCards);
@@ -141,7 +116,27 @@ export default function Home() {
     loadCards();
   };
 
+  /**
+   * 处理卡片点击事件
+   * 跳转到对应的工作流页面
+   * @param card - 被点击的卡片数据
+   * @param index - 卡片索引
+   */
+  const handleCardClick = (card: FeatureCardData, index: number) => {
+    console.log('🎯 卡片被点击:', card);
+    
+    // 如果卡片有ID，跳转到工作流页面
+    if (card.id) {
+      console.log('🚀 跳转到工作流页面:', `/workflow/${card.id}`);
+      router.push(`/workflow/${card.id}`);
+    } else {
+      console.warn('⚠️ 卡片没有ID，无法跳转');
+      toast.error('该卡片暂未配置工作流');
+    }
+  };
+
   // 监听页面焦点，当从后台管理页面返回时刷新数据
+  /*
   useEffect(() => {
     const handleFocus = () => {
       refreshCards();
@@ -152,6 +147,7 @@ export default function Home() {
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
+  */
 
   if (loading) {
     return (
@@ -174,7 +170,7 @@ export default function Home() {
           <>
             <SearchBar />
             <HeroBanner />
-            <FeatureGrid cards={cards} />
+            <FeatureGrid cards={cards} onCardClick={handleCardClick} />
           </>
         );
       case 'discover':
@@ -206,7 +202,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <div className="fixed top-0 left-0 right-0 z-50">
           <Header 
-            title="CATAIT智媒体运营工具" 
+            title="Ai企业获客盈利系统" 
             onAdminClick={handleAdminClick}
           />
         </div>

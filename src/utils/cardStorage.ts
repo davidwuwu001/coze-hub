@@ -1,4 +1,4 @@
-import { FeatureCardData, CardConfig } from '../types';
+import { FeatureCardData, CardConfig, StorableCardData } from '../types';
 import {
   Mic,
   Image,
@@ -248,8 +248,8 @@ class CardStorage {
         return;
       }
       
-      // 准备存储数据（移除icon组件引用）
-      const cardsToStore = cards.map(card => {
+      // 准备存储数据（移除icon组件引用，转换为StorableCardData格式）
+      const cardsToStore: StorableCardData[] = cards.map(card => {
         const { icon, ...cardData } = card;
         return cardData;
       });

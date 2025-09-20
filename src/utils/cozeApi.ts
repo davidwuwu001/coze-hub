@@ -146,7 +146,11 @@ export const runWorkflow = async (request: WorkflowRunRequest): Promise<Workflow
     const url = `${COZE_API_CONFIG.baseUrl}/workflow/run`;
 
     // 构建请求体
-    const requestBody = {
+    const requestBody: {
+      workflow_id: string;
+      parameters: { [key: string]: any };
+      bot_id?: string;
+    } = {
       workflow_id: request.workflow_id,
       parameters: request.parameters
     };

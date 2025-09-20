@@ -22,7 +22,7 @@ export interface RegisterData {
   email: string;
   phone: string;
   password: string;
-  inviteCode?: string;
+  invite_code?: string;
 }
 
 /**

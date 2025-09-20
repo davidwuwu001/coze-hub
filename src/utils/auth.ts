@@ -1,12 +1,12 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { User } from '../types/auth';
 
 /**
- * JWT密钥
+ * JWT密钥 - 确保类型安全
  */
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+const JWT_SECRET: string = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
+const JWT_EXPIRES_IN: string | number = process.env.JWT_EXPIRES_IN || '24h';
 
 /**
  * 密码加密
@@ -40,7 +40,11 @@ export function generateToken(user: User): string {
     email: user.email
   };
   
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  const options: SignOptions = {
+    expiresIn: '24h' // 直接使用字符串字面量
+  };
+  
+  return jwt.sign(payload, JWT_SECRET, options);
 }
 
 /**

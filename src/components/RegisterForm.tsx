@@ -4,6 +4,11 @@ import { Eye, EyeOff, User, Mail, Phone, Key, Gift } from 'lucide-react';
 import { RegisterData } from '../types/auth';
 import { isValidEmail, isValidPhone } from '../utils/auth';
 
+// 表单数据接口，包含确认密码字段
+interface RegisterFormData extends RegisterData {
+  confirm_password: string;
+}
+
 interface RegisterFormProps {
   onSubmit: (registerData: RegisterData) => Promise<{ success: boolean; message: string }>;
   loading?: boolean;
@@ -16,7 +21,7 @@ interface RegisterFormProps {
  * 包含用户名、手机号、邮箱、邀请码、密码等字段
  */
 const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, loading, error, onClearError }) => {
-  const [formData, setFormData] = useState<RegisterData>({
+  const [formData, setFormData] = useState<RegisterFormData>({
     username: '',
     email: '',
     phone: '',
@@ -98,13 +103,15 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, loading, error, o
       return;
     }
 
-    await onSubmit(formData);
+    // 从表单数据中移除 confirm_password 字段，只传递符合 RegisterData 类型的数据
+    const { confirm_password, ...registerData } = formData;
+    await onSubmit(registerData);
   };
 
   /**
    * 处理输入变化
    */
-  const handleInputChange = (field: keyof RegisterData, value: string) => {
+  const handleInputChange = (field: keyof RegisterFormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // 清除对应字段的错误
@@ -122,7 +129,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSubmit, loading, error, o
    * 渲染输入框
    */
   const renderInput = (
-    id: keyof RegisterData,
+    id: keyof RegisterFormData,
     label: string,
     type: string,
     placeholder: string,

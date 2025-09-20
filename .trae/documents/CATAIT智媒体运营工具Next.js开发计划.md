@@ -1,8 +1,8 @@
-# CATAIT智媒体运营工具 Next.js 开发计划
+# Ai企业获客盈利系统 Next.js 开发计划
 
 ## 1. 项目概述
 
-基于提供的参考图片，开发一个完全一比一还原的CATAIT智媒体运营工具界面。该项目将使用Next.js + TypeScript + Tailwind CSS技术栈，实现移动端优先的响应式设计。
+基于提供的参考图片，开发一个完全一比一还原的Ai企业获客盈利系统界面。该项目将使用Next.js + TypeScript + Tailwind CSS技术栈，实现移动端优先的响应式设计。
 
 ## 2. 项目整体架构设计
 

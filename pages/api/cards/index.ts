@@ -100,7 +100,7 @@ export default async function handler(
     const whereClause = isAdminMode ? '' : 'WHERE enabled = 1';
     const cards = await executeQuery(
       `SELECT id, name, description, icon, background_color, sort_order, enabled, created_at, updated_at,
-              workflow_id, api_key, workflow_enabled
+              workflow_id, api_token
        FROM feature_cards 
        ${whereClause} 
        ORDER BY sort_order ASC, id ASC`
@@ -117,8 +117,8 @@ export default async function handler(
       order: card.sort_order,
       enabled: card.enabled,
       workflowId: card.workflow_id,
-      apiKey: card.api_key,
-      workflowEnabled: card.workflow_enabled,
+      apiToken: card.api_token,
+      workflowEnabled: true, // 工作流默认启用
       createdAt: card.created_at?.toISOString(),
       updatedAt: card.updated_at?.toISOString()
     }));

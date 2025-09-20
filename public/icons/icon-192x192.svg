@@ -1,0 +1,24 @@
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="blueGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#60a5fa;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- 背景圆 -->
+  <circle cx="96" cy="96" r="96" fill="#ffffff"/>
+  <!-- 外圆环 -->
+  <circle cx="96" cy="96" r="92" fill="none" stroke="#60a5fa" stroke-width="5.333333333333333" opacity="0.3"/>
+  <!-- 内圆 -->
+  <circle cx="96" cy="96" r="84" fill="url(#blueGradient)"/>
+  <!-- 中心图标 -->
+  <g transform="translate(96,96)">
+    <!-- 工作流图标 -->
+    <circle cx="-21.333333333333332" cy="-21.333333333333332" r="8" fill="white"/>
+    <circle cx="21.333333333333332" cy="-21.333333333333332" r="8" fill="white"/>
+    <circle cx="0" cy="21.333333333333332" r="8" fill="white"/>
+    <line x1="-13.714285714285714" y1="-21.333333333333332" x2="13.714285714285714" y2="-21.333333333333332" stroke="white" stroke-width="5.333333333333333"/>
+    <line x1="-13.714285714285714" y1="-16" x2="-5.333333333333333" y2="13.714285714285714" stroke="white" stroke-width="5.333333333333333"/>
+    <line x1="13.714285714285714" y1="-16" x2="5.333333333333333" y2="13.714285714285714" stroke="white" stroke-width="5.333333333333333"/>
+  </g>
+</svg>

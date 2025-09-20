@@ -1,5 +1,5 @@
 import React from 'react';
-import { LucideIcon, Play } from 'lucide-react';
+import { LucideIcon } from 'lucide-react';
 
 /**
  * 根据背景颜色获取对应的渐变色和阴影色
@@ -69,12 +69,6 @@ interface FeatureCardProps {
   bgColor: string;
   /** 点击事件处理函数 */
   onClick?: () => void;
-  /** 是否启用工作流 */
-  workflowEnabled?: boolean;
-  /** 工作流ID */
-  workflowId?: string;
-  /** 工作流参数 */
-  workflowParams?: string;
 }
 
 /**
@@ -86,20 +80,9 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   desc,
   icon: IconComponent,
   bgColor,
-  onClick,
-  workflowEnabled = false,
-  workflowId = '',
-  workflowParams = '{}'
+  onClick
 }) => {
   
-  /**
-   * 处理工作流按钮点击
-   */
-  const handleWorkflowClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 阻止事件冒泡
-    console.log('启动工作流:', workflowId, workflowParams);
-    // 这里可以添加实际的工作流启动逻辑
-  };
   console.log('🎴 FeatureCard渲染:', { name, desc, IconComponent: !!IconComponent, bgColor });
   return (
     <div 
@@ -128,15 +111,6 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
         <div className="flex-1">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-gray-900 font-medium text-sm">{name}</h3>
-            {workflowEnabled && (
-              <button
-                onClick={handleWorkflowClick}
-                className="p-1 text-purple-600 hover:bg-purple-50 rounded transition-colors"
-                title="启动工作流"
-              >
-                <Play className="w-3 h-3" />
-              </button>
-            )}
           </div>
           <p className="text-gray-500 text-xs">{desc}</p>
         </div>

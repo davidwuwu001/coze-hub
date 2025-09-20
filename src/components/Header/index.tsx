@@ -17,7 +17,7 @@ export interface HeaderProps {
  * @param onAdminClick - 后台管理按钮点击回调
  */
 const Header: React.FC<HeaderProps> = ({
-  title = 'CATAIT智媒体运营工具',
+  title = 'Ai企业获客盈利系统',
   showControls = true,
   className,
   onAdminClick

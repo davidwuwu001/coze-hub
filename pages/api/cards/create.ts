@@ -15,7 +15,7 @@ export default async function handler(
   }
 
   try {
-    const { name, desc, iconName, bgColor, order, enabled, workflowId, apiKey, workflowEnabled } = req.body;
+    const { name, desc, iconName, bgColor, order, enabled, workflowId, apiToken } = req.body;
 
     // 验证必填字段
     if (!name || !desc || !iconName) {
@@ -26,9 +26,9 @@ export default async function handler(
     
     // 插入新卡片
     const [result] = await connection.execute(
-      `INSERT INTO feature_cards (name, description, icon, background_color, sort_order, enabled, workflow_id, api_key, workflow_enabled, created_at, updated_at) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [name, desc, iconName, bgColor || 'bg-blue-500', order || 0, enabled !== false, workflowId || '', apiKey || '', workflowEnabled || false]
+      `INSERT INTO feature_cards (name, description, icon, background_color, sort_order, enabled, workflow_id, api_token, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [name, desc, iconName, bgColor || 'bg-blue-500', order || 0, enabled !== false, workflowId || '', apiToken || '']
     );
 
     await connection.end();
@@ -43,8 +43,8 @@ export default async function handler(
       order: order || 0,
       enabled: enabled !== false,
       workflowId: workflowId || '',
-      apiKey: apiKey || '',
-      workflowEnabled: workflowEnabled || false,
+      apiToken: apiToken || '',
+      workflowEnabled: true, // 工作流默认启用
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

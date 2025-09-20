@@ -16,8 +16,7 @@ export interface FeatureCardData {
   icon: LucideIcon;
   /** 背景颜色类名 */
   bgColor: string;
-  /** 是否启用工作流 */
-  workflowEnabled?: boolean;
+
   /** 工作流ID */
   workflowId?: string;
   /** 工作流参数 */
@@ -62,9 +61,6 @@ export default function FeatureGrid({ cards, onCardClick }: FeatureGridProps) {
               desc={card.desc}
               icon={card.icon}
               bgColor={card.bgColor}
-              workflowEnabled={card.workflowEnabled}
-              workflowId={card.workflowId}
-              workflowParams={card.workflowParams}
               onClick={() => onCardClick?.(card, index)}
             />
           ))}

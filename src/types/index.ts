@@ -1,18 +1,16 @@
 import { LucideIcon } from 'lucide-react';
 
 /**
- * 功能卡片数据接口
- * 定义每个功能卡片的基本信息
+ * 存储用的功能卡片数据接口（不包含 icon 组件）
+ * 用于序列化存储到 localStorage 或数据库
  */
-export interface FeatureCardData {
+export interface StorableCardData {
   /** 卡片唯一标识符 */
   id: string;
   /** 功能名称 */
   name: string;
   /** 功能描述 */
   desc: string;
-  /** 图标组件 */
-  icon: LucideIcon;
   /** 图标名称（用于序列化存储） */
   iconName: string;
   /** 背景颜色类名 */
@@ -23,9 +21,9 @@ export interface FeatureCardData {
   enabled: boolean;
   /** 工作流ID */
   workflowId?: string;
-  /** API密钥 */
-  apiKey?: string;
-  /** 是否启用工作流 */
+  /** API令牌 */
+  apiToken?: string;
+  /** 是否启用工作流（默认启用） */
   workflowEnabled?: boolean;
   /** 创建时间 */
   createdAt?: string;
@@ -34,12 +32,21 @@ export interface FeatureCardData {
 }
 
 /**
+ * 功能卡片数据接口（包含 icon 组件）
+ * 用于前端组件渲染
+ */
+export interface FeatureCardData extends StorableCardData {
+  /** 图标组件 */
+  icon: LucideIcon;
+}
+
+/**
  * 卡片配置管理接口
  * 用于后台管理系统的数据操作
  */
 export interface CardConfig {
-  /** 所有卡片数据 */
-  cards: FeatureCardData[];
+  /** 所有卡片数据（存储格式） */
+  cards: StorableCardData[];
   /** 配置版本号 */
   version: string;
   /** 最后更新时间 */

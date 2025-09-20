@@ -196,8 +196,8 @@ function AdminPage() {
       order: cards.length,
       enabled: true,
       workflowId: '',
-      apiKey: '',
-      workflowEnabled: false
+      apiToken: '',
+      workflowEnabled: true
     });
   };
 
@@ -491,7 +491,7 @@ function AdminPage() {
         order: editingCard.order || 0,
         enabled: editingCard.enabled !== false,
         workflowId: editingCard.workflowId || '',
-        apiKey: editingCard.apiKey || '',
+        apiToken: editingCard.apiToken || '',
         workflowEnabled: editingCard.workflowEnabled || false
       };
 
@@ -772,7 +772,7 @@ function AdminPage() {
                                   <button
                                     onClick={() => {
                                       // 启动工作流的逻辑
-                                      console.log('启动工作流:', card.workflowId, card.apiKey);
+                                      console.log('启动工作流:', card.workflowId, card.apiToken);
                                     }}
                                     className="p-1 text-purple-600 hover:bg-purple-50 rounded"
                                     title="启动工作流"
@@ -1085,62 +1085,38 @@ function AdminPage() {
               
               {/* 工作流配置分隔线 */}
               <div className="border-t pt-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-3">工作流配置</h3>
-                
-                {/* 启用工作流开关 */}
-                <div className="flex items-center justify-between mb-4">
-                  <label className="block text-sm font-medium text-gray-700">
-                    启用工作流
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setEditingCard(prev => ({ ...prev, workflowEnabled: !prev.workflowEnabled }))}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                      editingCard.workflowEnabled ? 'bg-blue-600' : 'bg-gray-200'
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        editingCard.workflowEnabled ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
+                <h3 className="text-sm font-medium text-gray-700 mb-3">工作流配置（默认启用）</h3>
                 
                 {/* 工作流ID */}
-                {editingCard.workflowEnabled && (
-                  <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      工作流ID
-                    </label>
-                    <input
-                      type="text"
-                      value={editingCard.workflowId || ''}
-                      onChange={(e) => setEditingCard(prev => ({ ...prev, workflowId: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="请输入工作流ID"
-                    />
-                  </div>
-                )}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    工作流ID
+                  </label>
+                  <input
+                    type="text"
+                    value={editingCard.workflowId || ''}
+                    onChange={(e) => setEditingCard(prev => ({ ...prev, workflowId: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="请输入工作流ID"
+                  />
+                </div>
                 
-                {/* API密钥 */}
-                {editingCard.workflowEnabled && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      API密钥
-                    </label>
-                    <input
-                      type="password"
-                      value={editingCard.apiKey || ''}
-                      onChange={(e) => setEditingCard(prev => ({ ...prev, apiKey: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="请输入API密钥"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      请输入用于调用工作流的API密钥
-                    </p>
-                  </div>
-                )}
+                {/* API令牌 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    API令牌
+                  </label>
+                  <input
+                    type="password"
+                    value={editingCard.apiToken || ''}
+                    onChange={(e) => setEditingCard(prev => ({ ...prev, apiToken: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="请输入API令牌"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    请输入用于调用工作流的API令牌
+                  </p>
+                </div>
                 </div>
               </div>
             </div>

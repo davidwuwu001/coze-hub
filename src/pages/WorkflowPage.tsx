@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Play, RotateCcw, Clock, CheckCircle, XCircle, History as HistoryIcon } from 'lucide-react';
+import { ArrowLeft, Play, RotateCcw, Clock, CheckCircle, XCircle, History as HistoryIcon, AlertCircle } from 'lucide-react';
 import DynamicForm from '../components/DynamicForm';
 import ResultDisplay from '../components/ResultDisplay';
 import HistoryPanel from '../components/HistoryPanel';
-import { executeWorkflow } from '../utils/cozeApi';
+import { runWorkflow, getWorkflowStatus, pollWorkflowStatus } from '../utils/cozeApi';
 import { historyStorage, HistoryItem } from '../utils/historyStorage';
 
 // 类型定义
@@ -123,8 +123,30 @@ const WorkflowPage: React.FC = () => {
       
       // 执行工作流
       const startTime = Date.now();
-      const workflowResult = await executeWorkflow(config.workflow_id, inputs);
+      const workflowResponse = await runWorkflow({
+        workflow_id: config.workflow_id,
+        parameters: inputs
+      });
+      
+      if (workflowResponse.code !== 0 || !workflowResponse.data) {
+        throw new Error(workflowResponse.msg || '工作流执行失败');
+      }
+      
+      // 轮询获取结果
+      const finalResult = await pollWorkflowStatus(workflowResponse.data.id);
       const executionTime = (Date.now() - startTime) / 1000;
+      
+      // 转换为 WorkflowResult 格式
+      const workflowResult: WorkflowResult = {
+        id: finalResult.data?.id || '',
+        status: finalResult.data?.status || 'Failed',
+        output: finalResult.data?.output,
+        error: finalResult.data?.error,
+        debug_url: finalResult.data?.debug_url,
+        created_at: finalResult.data?.created_at || Date.now(),
+        updated_at: finalResult.data?.updated_at || Date.now(),
+        execution_time: executionTime
+      };
       
       // 更新结果
       setResult(workflowResult);
@@ -267,9 +289,13 @@ const WorkflowPage: React.FC = () => {
             <div className="bg-white rounded-xl p-6 shadow-sm border">
               <h2 className="text-lg font-semibold mb-4">输入参数</h2>
               <DynamicForm
-                fields={config?.input_config?.fields || []}
-                values={formData}
-                onChange={setFormData}
+                configs={(config?.input_config?.fields || []).map((field, index) => ({
+                  ...field,
+                  id: field.name || `field_${index}`
+                }))}
+                initialData={formData}
+                onDataChange={setFormData}
+                onSubmit={() => {}}
               />
               
               {/* 操作按钮 */}
@@ -346,11 +372,11 @@ const WorkflowPage: React.FC = () => {
       {showHistory && (
         <HistoryPanel
           cardId={cardId || ''}
-          onClose={() => setShowHistory(false)}
-          onLoad={handleLoadFromHistory}
-          onDelete={handleDeleteHistory}
-          onClear={handleClearHistory}
-          currentHistoryId={currentHistoryId}
+          onRerun={handleLoadFromHistory}
+          onViewResult={(result) => {
+            setResult(result);
+            setShowHistory(false);
+          }}
         />
       )}
     </div>

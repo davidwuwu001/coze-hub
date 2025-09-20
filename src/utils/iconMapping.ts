@@ -43,11 +43,7 @@ import {
 } from 'lucide-react';
 import { IconOption } from '../types';
 
-/**
- * 图标名称到组件的映射表
- * 用于从字符串名称获取对应的图标组件
- */
-export const iconMap: Record<string, LucideIcon> = {
+const iconMapData = {
   // 媒体相关
   Mic,
   Image,
@@ -98,18 +94,22 @@ export const iconMap: Record<string, LucideIcon> = {
   Bell,
   Mail,
   Phone,
-  
-  // 时间相关
   Calendar,
   Clock,
   
-  // 文件操作
+  // 其他
+  Hash,
   Download,
   Upload,
-  
-  // 其他
-  Hash
 };
+
+export type IconName = keyof typeof iconMapData;
+
+/**
+ * 图标映射对象
+ * 用于从字符串名称获取对应的图标组件
+ */
+export const iconMap: Record<string, LucideIcon> = iconMapData;
 
 /**
  * 获取图标组件
