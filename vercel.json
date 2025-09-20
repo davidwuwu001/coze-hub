@@ -1,11 +1,6 @@
 {
   "framework": "nextjs",
   "regions": ["hkg1"],
-  "functions": {
-    "pages/api/**/*.{js,ts}": {
-      "runtime": "nodejs20.x"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
