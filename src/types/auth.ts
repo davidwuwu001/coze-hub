@@ -7,6 +7,8 @@ export interface User {
   email: string;
   phone: string;
   invite_code?: string;
+  avatar?: string; // 用户头像URL
+  points: number; // 用户积分
   created_at: string;
   updated_at: string;
   is_active: boolean;
@@ -95,4 +97,45 @@ export interface InviteCode {
   created_at: string;
   used_at?: string;
   is_active: boolean;
+}
+
+/**
+ * 个人信息更新数据接口
+ */
+export interface UpdateProfileData {
+  username?: string;
+  phone?: string;
+  email?: string;
+  avatar?: string;
+}
+
+/**
+ * 积分记录接口
+ */
+export interface PointsRecord {
+  id: number;
+  user_id: number;
+  points: number;
+  type: 'earn' | 'spend' | 'recharge'; // 获得、消费、充值
+  description: string;
+  created_at: string;
+}
+
+/**
+ * 积分充值数据接口
+ */
+export interface RechargePointsData {
+  amount: number; // 充值金额
+  points: number; // 获得积分
+  payment_method: string; // 支付方式
+}
+
+/**
+ * 密码找回数据接口
+ */
+export interface PasswordResetData {
+  username: string;
+  phone: string;
+  email: string;
+  newPassword: string;
 }

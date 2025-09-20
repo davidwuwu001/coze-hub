@@ -16,11 +16,12 @@ import {
   EyeOff,
   Download,
   Upload,
-  RotateCcw
+  RotateCcw,
+  GripVertical,
+  RefreshCw
 } from 'lucide-react';
 import { FeatureCardData, AdminPageState, CardActionType, IconName } from '../src/types';
 import { getIconByName, getAvailableIcons, iconMap } from '../src/utils/iconMapping';
-import { cardStorage } from '../src/utils/cardStorage';
 import DragDropList from '../src/components/DragDropList';
 import IconSelector from '../src/components/IconSelector';
 import ProtectedRoute from '../src/components/ProtectedRoute';
@@ -49,10 +50,27 @@ export default function AdminPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [message, setMessage] = useState<{type: 'success' | 'error', text: string} | null>(null);
   
+  /**
+   * 从API加载卡片数据
+   */
+  const loadCards = async () => {
+    try {
+      const response = await fetch('/api/cards?admin=true');
+      if (response.ok) {
+        const cardsData = await response.json();
+        setCards(cardsData);
+      } else {
+        setMessage({ type: 'error', text: '加载卡片数据失败' });
+      }
+    } catch (error) {
+      console.error('加载卡片数据失败:', error);
+      setMessage({ type: 'error', text: '加载卡片数据失败' });
+    }
+  };
+
   // 加载卡片数据
   useEffect(() => {
-    const loadedCards = cardStorage.getCards();
-    setCards(loadedCards);
+    loadCards();
   }, []);
   
   // 返回首页
@@ -60,17 +78,21 @@ export default function AdminPage() {
     router.push('/');
   };
   
-  // 保存卡片配置
-  const handleSaveCards = () => {
-    cardStorage.saveCards(cards);
-    alert('配置已保存！');
+  /**
+   * 刷新卡片数据
+   */
+  const handleRefreshCards = () => {
+    loadCards();
+    setMessage({ type: 'success', text: '数据已刷新' });
+    setTimeout(() => setMessage(null), 3000);
   };
   
-  // 添加新卡片
+  /**
+   * 添加新卡片
+   */
   const handleAddCard = () => {
     setState(prev => ({ ...prev, showAddDialog: true, isEditing: true }));
     setEditingCard({
-      id: Date.now().toString(),
       name: '',
       desc: '',
       iconName: 'FileText',
@@ -94,70 +116,163 @@ export default function AdminPage() {
   /**
    * 处理卡片重新排序
    */
-  const handleReorderCards = (reorderedCards: FeatureCardData[]) => {
-    setCards(reorderedCards);
-    cardStorage.saveCards(reorderedCards);
-    setMessage({ type: 'success', text: '卡片顺序已更新' });
+  const handleReorderCards = async (reorderedCards: FeatureCardData[]) => {
+    try {
+      const response = await fetch('/api/cards/reorder', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ cards: reorderedCards }),
+      });
+
+      if (response.ok) {
+        setCards(reorderedCards);
+        setMessage({ type: 'success', text: '卡片顺序已更新' });
+      } else {
+        setMessage({ type: 'error', text: '更新卡片顺序失败' });
+      }
+    } catch (error) {
+      console.error('更新卡片顺序失败:', error);
+      setMessage({ type: 'error', text: '更新卡片顺序失败' });
+    }
     setTimeout(() => setMessage(null), 3000);
   };
 
   /**
    * 处理启用/禁用切换
    */
-  const handleToggleEnabled = (cardId: string, enabled: boolean) => {
-    const newCards = cards.map(card => 
-      card.id === cardId ? { ...card, enabled } : card
-    );
-    setCards(newCards);
-    setMessage({ 
-      type: 'success', 
-      text: enabled ? '卡片已启用' : '卡片已禁用' 
-    });
+  const handleToggleEnabled = async (cardId: string, enabled: boolean) => {
+    const card = cards.find(c => c.id === cardId);
+    if (!card) return;
+
+    try {
+      const response = await fetch('/api/cards/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: cardId,
+          name: card.name,
+          desc: card.desc,
+          iconName: card.iconName,
+          bgColor: card.bgColor,
+          order: card.order,
+          enabled
+        }),
+      });
+
+      if (response.ok) {
+        const newCards = cards.map(c => 
+          c.id === cardId ? { ...c, enabled } : c
+        );
+        setCards(newCards);
+        setMessage({ 
+          type: 'success', 
+          text: enabled ? '卡片已启用' : '卡片已禁用' 
+        });
+      } else {
+        setMessage({ type: 'error', text: '更新卡片状态失败' });
+      }
+    } catch (error) {
+      console.error('更新卡片状态失败:', error);
+      setMessage({ type: 'error', text: '更新卡片状态失败' });
+    }
     setTimeout(() => setMessage(null), 3000);
   };
   
-  // 删除卡片
-  const handleDeleteCard = (cardId: string) => {
-    if (confirm('确定要删除这个卡片吗？')) {
-      const newCards = cards.filter(card => card.id !== cardId);
-      setCards(newCards);
+  /**
+   * 删除卡片
+   */
+  const handleDeleteCard = async (cardId: string) => {
+    if (!confirm('确定要删除这个卡片吗？')) {
+      return;
     }
+
+    try {
+      const response = await fetch('/api/cards/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: cardId }),
+      });
+
+      if (response.ok) {
+        const newCards = cards.filter(card => card.id !== cardId);
+        setCards(newCards);
+        setMessage({ type: 'success', text: '卡片删除成功' });
+      } else {
+        setMessage({ type: 'error', text: '删除卡片失败' });
+      }
+    } catch (error) {
+      console.error('删除卡片失败:', error);
+      setMessage({ type: 'error', text: '删除卡片失败' });
+    }
+    setTimeout(() => setMessage(null), 3000);
   };
   
-  // 保存编辑的卡片
-  const handleSaveEditingCard = () => {
+  /**
+   * 保存编辑的卡片
+   */
+  const handleSaveEditingCard = async () => {
     if (!editingCard.name || !editingCard.desc) {
       setMessage({ type: 'error', text: '请填写完整的卡片信息' });
       return;
     }
     
-    const cardData: FeatureCardData = {
-      ...editingCard,
-      icon: getIconByName(editingCard.iconName || 'FileText'),
-      updatedAt: new Date().toISOString()
-    } as FeatureCardData;
-    
-    if (state.editingCardId) {
-      // 更新现有卡片
-      const newCards = cards.map(card => 
-        card.id === state.editingCardId ? cardData : card
-      );
-      setCards(newCards);
-    } else {
-      // 添加新卡片
-      cardData.createdAt = new Date().toISOString();
-      setCards(prev => [...prev, cardData]);
+    try {
+      const cardData = {
+        name: editingCard.name,
+        desc: editingCard.desc,
+        iconName: editingCard.iconName || 'FileText',
+        bgColor: editingCard.bgColor || 'bg-blue-500',
+        order: editingCard.order || 0,
+        enabled: editingCard.enabled !== false
+      };
+
+      let response;
+      if (state.editingCardId) {
+        // 更新现有卡片
+        response = await fetch('/api/cards/update', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id: state.editingCardId, ...cardData }),
+        });
+      } else {
+        // 添加新卡片
+        response = await fetch('/api/cards/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(cardData),
+        });
+      }
+
+      if (response.ok) {
+        // 重新加载卡片数据
+        await loadCards();
+        
+        // 重置状态
+        setState(prev => ({
+          ...prev,
+          isEditing: false,
+          editingCardId: null,
+          showAddDialog: false
+        }));
+        setEditingCard({});
+        setMessage({ type: 'success', text: '卡片保存成功' });
+      } else {
+        setMessage({ type: 'error', text: '保存卡片失败' });
+      }
+    } catch (error) {
+      console.error('保存卡片失败:', error);
+      setMessage({ type: 'error', text: '保存卡片失败' });
     }
-    
-    // 重置状态
-    setState(prev => ({
-      ...prev,
-      isEditing: false,
-      editingCardId: null,
-      showAddDialog: false
-    }));
-    setEditingCard({});
-    setMessage({ type: 'success', text: '卡片保存成功' });
     setTimeout(() => setMessage(null), 3000);
   };
 
@@ -217,11 +332,11 @@ export default function AdminPage() {
           
           <div className="flex items-center space-x-2">
             <button
-              onClick={handleSaveCards}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              onClick={handleRefreshCards}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
             >
-              <Save className="w-4 h-4" />
-              <span>保存配置</span>
+              <RotateCcw className="w-4 h-4" />
+              刷新数据
             </button>
           </div>
         </div>

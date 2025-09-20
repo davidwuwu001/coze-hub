@@ -203,7 +203,8 @@ class CardStorage {
       // 按order排序
       return cards.sort((a, b) => a.order - b.order);
     } catch (error) {
-      console.error('Error loading cards from storage:', error);
+      // 静默处理localStorage读取错误，使用默认数据
+      console.log('Using default cards due to storage error');
       return defaultCards;
     }
   }

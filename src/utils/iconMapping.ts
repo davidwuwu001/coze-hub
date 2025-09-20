@@ -39,7 +39,6 @@ import {
   Music,
   Play,
   Pause,
-  Stop,
   LucideIcon
 } from 'lucide-react';
 import { IconOption } from '../types';
@@ -58,7 +57,6 @@ export const iconMap: Record<string, LucideIcon> = {
   Volume2,
   Play,
   Pause,
-  Stop,
   
   // 文档相关
   FileText,

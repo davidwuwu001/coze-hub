@@ -18,9 +18,23 @@ export const useAuth = () => {
       setLoading(true);
       setError(null);
       
+      const token = localStorage.getItem('token');
+      
+      // 如果没有token，直接设置为未登录状态
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      
+      const headers: Record<string, string> = {
+        'Authorization': `Bearer ${token}`
+      };
+      
       const response = await fetch('/api/auth/verify', {
         method: 'GET',
         credentials: 'include',
+        headers
       });
 
       if (response.ok) {
@@ -29,13 +43,18 @@ export const useAuth = () => {
           setUser(data.data.user);
         } else {
           setUser(null);
+          // 如果验证失败，清除无效的token
+          localStorage.removeItem('token');
         }
       } else {
         setUser(null);
+        // 如果验证失败，清除无效的token
+        localStorage.removeItem('token');
       }
     } catch (err) {
       console.error('检查认证状态失败:', err);
       setUser(null);
+      localStorage.removeItem('token');
     } finally {
       setLoading(false);
     }
@@ -62,6 +81,10 @@ export const useAuth = () => {
 
       if (data.success) {
         setUser(data.data.user);
+        // 保存JWT令牌到localStorage
+        if (data.data.token) {
+          localStorage.setItem('token', data.data.token);
+        }
         return { success: true, message: data.message };
       } else {
         setError(data.message);
@@ -129,6 +152,8 @@ export const useAuth = () => {
 
       if (data.success) {
         setUser(null);
+        // 清除localStorage中的token
+        localStorage.removeItem('token');
         return { success: true, message: data.message };
       } else {
         setError(data.message);
