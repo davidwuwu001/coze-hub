@@ -21,6 +21,12 @@ export interface FeatureCardData {
   order: number;
   /** 是否启用 */
   enabled: boolean;
+  /** 工作流ID */
+  workflowId?: string;
+  /** 工作流参数配置 */
+  workflowParams?: Record<string, any>;
+  /** 是否启用工作流 */
+  workflowEnabled?: boolean;
   /** 创建时间 */
   createdAt?: string;
   /** 更新时间 */

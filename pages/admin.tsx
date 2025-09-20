@@ -185,7 +185,10 @@ function AdminPage() {
       iconName: 'FileText',
       bgColor: 'bg-blue-500',
       order: cards.length,
-      enabled: true
+      enabled: true,
+      workflowId: '',
+      workflowParams: '{}',
+      workflowEnabled: false
     });
   };
 
@@ -464,7 +467,10 @@ function AdminPage() {
         iconName: editingCard.iconName || 'FileText',
         bgColor: editingCard.bgColor || 'bg-blue-500',
         order: editingCard.order || 0,
-        enabled: editingCard.enabled !== false
+        enabled: editingCard.enabled !== false,
+        workflowId: editingCard.workflowId || '',
+        workflowParams: editingCard.workflowParams || '{}',
+        workflowEnabled: editingCard.workflowEnabled || false
       };
 
       let response;
@@ -1017,6 +1023,73 @@ function AdminPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="排序权重（数字越小越靠前）"
                 />
+              </div>
+              
+              {/* 工作流配置分隔线 */}
+              <div className="border-t pt-4">
+                <h3 className="text-sm font-medium text-gray-700 mb-3">工作流配置</h3>
+                
+                {/* 启用工作流开关 */}
+                <div className="flex items-center justify-between mb-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    启用工作流
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setEditingCard(prev => ({ ...prev, workflowEnabled: !prev.workflowEnabled }))}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                      editingCard.workflowEnabled ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        editingCard.workflowEnabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+                
+                {/* 工作流ID */}
+                {editingCard.workflowEnabled && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      工作流ID
+                    </label>
+                    <input
+                      type="text"
+                      value={editingCard.workflowId || ''}
+                      onChange={(e) => setEditingCard(prev => ({ ...prev, workflowId: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="请输入工作流ID"
+                    />
+                  </div>
+                )}
+                
+                {/* 工作流参数 */}
+                {editingCard.workflowEnabled && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      工作流参数（JSON格式）
+                    </label>
+                    <textarea
+                      value={editingCard.workflowParams ? JSON.stringify(editingCard.workflowParams, null, 2) : ''}
+                      onChange={(e) => {
+                        try {
+                          const params = e.target.value ? JSON.parse(e.target.value) : null;
+                          setEditingCard(prev => ({ ...prev, workflowParams: params }));
+                        } catch (error) {
+                          // 保持原值，等用户输入完整的JSON
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder='{"key": "value"}'
+                      rows={4}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      请输入有效的JSON格式参数，例如：{'{"timeout": 30, "retries": 3}'}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             

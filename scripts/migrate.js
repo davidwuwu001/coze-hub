@@ -1,94 +1,72 @@
-const { query, testConnection } = require('../src/lib/database');
+/**
+ * 数据库迁移脚本
+ * 用于执行SQL迁移文件
+ */
+const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
+// 数据库配置
+const dbConfig = {
+  host: '124.223.62.233',
+  port: 3306,
+  user: 'coze-hub',
+  password: '7788Gg7788',
+  database: 'coze-hub',
+  multipleStatements: true
+};
+
 /**
- * 数据库迁移工具
- * 执行migrations目录下的SQL文件
+ * 执行迁移文件
  */
-class DatabaseMigrator {
-  constructor() {
-    this.migrationsDir = path.join(process.cwd(), 'migrations');
-  }
-
-  /**
-   * 获取所有迁移文件
-   * @returns {string[]} 迁移文件列表
-   */
-  getMigrationFiles() {
-    if (!fs.existsSync(this.migrationsDir)) {
-      console.log('migrations目录不存在');
-      return [];
-    }
-
-    return fs.readdirSync(this.migrationsDir)
-      .filter(file => file.endsWith('.sql'))
-      .sort();
-  }
-
-  /**
-   * 执行单个迁移文件
-   * @param {string} filename 文件名
-   */
-  async executeMigration(filename) {
-    const filePath = path.join(this.migrationsDir, filename);
-    const sql = fs.readFileSync(filePath, 'utf8');
+async function runMigration() {
+  let connection;
+  
+  try {
+    // 连接数据库
+    connection = await mysql.createConnection(dbConfig);
+    console.log('数据库连接成功');
     
-    console.log(`执行迁移: ${filename}`);
+    // 执行迁移SQL语句
+    const sqls = [
+      `ALTER TABLE feature_cards 
+       ADD COLUMN workflow_id VARCHAR(100) DEFAULT '' COMMENT '工作流ID',
+       ADD COLUMN workflow_params JSON DEFAULT NULL COMMENT '工作流参数配置(JSON格式)',
+       ADD COLUMN workflow_enabled TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否启用工作流(1:启用, 0:禁用)'`,
+      
+      `ALTER TABLE feature_cards ADD INDEX idx_workflow_enabled (workflow_enabled)`,
+      
+      `ALTER TABLE feature_cards ADD INDEX idx_workflow_id (workflow_id)`
+    ];
     
-    // 分割SQL语句（以分号分割）
-    const statements = sql.split(';').filter(stmt => stmt.trim().length > 0);
-    
-    for (const statement of statements) {
-      if (statement.trim()) {
-        try {
-          await query(statement.trim());
-        } catch (error) {
-          console.error(`执行SQL失败: ${statement.substring(0, 100)}...`);
+    for (let i = 0; i < sqls.length; i++) {
+      console.log(`执行SQL ${i + 1}:`);
+      console.log(sqls[i]);
+      
+      try {
+        await connection.execute(sqls[i]);
+        console.log(`SQL ${i + 1} 执行成功`);
+      } catch (error) {
+        if (error.code === 'ER_DUP_FIELDNAME' || error.code === 'ER_DUP_KEYNAME') {
+          console.log(`SQL ${i + 1} 跳过 (字段或索引已存在): ${error.message}`);
+        } else {
           throw error;
         }
       }
     }
     
-    console.log(`✅ ${filename} 执行成功`);
-  }
-
-  /**
-   * 运行所有迁移
-   */
-  async runMigrations() {
-    try {
-      // 测试数据库连接
-      const isConnected = await testConnection();
-      if (!isConnected) {
-        throw new Error('数据库连接失败');
-      }
-
-      const migrationFiles = this.getMigrationFiles();
-      
-      if (migrationFiles.length === 0) {
-        console.log('没有找到迁移文件');
-        return;
-      }
-
-      console.log(`找到 ${migrationFiles.length} 个迁移文件`);
-      
-      for (const file of migrationFiles) {
-        await this.executeMigration(file);
-      }
-      
-      console.log('🎉 所有迁移执行完成');
-    } catch (error) {
-      console.error('迁移执行失败:', error);
-      process.exit(1);
+    console.log('迁移执行成功！工作流字段已添加到feature_cards表');
+    
+  } catch (error) {
+    console.error('迁移执行失败:', error.message);
+    process.exit(1);
+  } finally {
+    if (connection) {
+      await connection.end();
+      console.log('数据库连接已关闭');
     }
   }
 }
 
-// 如果直接运行此脚本
-if (require.main === module) {
-  const migrator = new DatabaseMigrator();
-  migrator.runMigrations();
-}
-
-module.exports = DatabaseMigrator;
+// 执行迁移
+runMigration();

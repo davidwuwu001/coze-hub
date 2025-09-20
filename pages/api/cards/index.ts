@@ -99,13 +99,14 @@ export default async function handler(
     // 根据管理员模式决定查询条件
     const whereClause = isAdminMode ? '' : 'WHERE enabled = 1';
     const cards = await executeQuery(
-      `SELECT id, name, description, icon_name, bg_color, order_index, enabled, created_at, updated_at 
+      `SELECT id, name, description, icon_name, bg_color, order_index, enabled, created_at, updated_at,
+              workflow_id, workflow_params, workflow_enabled
        FROM feature_cards 
        ${whereClause} 
        ORDER BY order_index ASC, id ASC`
     );
 
-    // 转换数据格式，添加图标组件
+    // 转换数据格式，添加图标组件和工作流字段
     const formattedCards = cards.map((card: any) => ({
       id: card.id.toString(),
       name: card.name,
@@ -115,6 +116,9 @@ export default async function handler(
       bgColor: card.bg_color,
       order: card.order_index,
       enabled: card.enabled,
+      workflowId: card.workflow_id,
+      workflowParams: card.workflow_params ? JSON.parse(card.workflow_params) : null,
+      workflowEnabled: card.workflow_enabled,
       createdAt: card.created_at?.toISOString(),
       updatedAt: card.updated_at?.toISOString()
     }));
