@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { 
+  Settings, FileText, Video, BookOpen, Search, Image, Mic, 
+  Volume2, TrendingUp, Edit, User, BarChart3, Target 
+} from 'lucide-react';
 import Header from '../src/components/Header';
 import SearchBar from '../src/components/SearchBar';
 import HeroBanner from '../src/components/HeroBanner';
@@ -7,38 +11,109 @@ import FeatureGrid from '../src/components/FeatureGrid';
 import BottomNavigation from '../src/components/BottomNavigation';
 import ProfilePage from '../src/components/ProfilePage';
 import ProtectedRoute from '../src/components/ProtectedRoute';
-import SensitiveOperationGuard from '../src/components/SensitiveOperationGuard';
 import { FeatureCardData } from '../src/types';
-import { useOptimizedAuth } from '../src/hooks/useOptimizedAuth';
-import { useCards } from '../src/hooks/useCards';
-import { SensitiveOperation } from '../src/utils/authUtils';
+import { useAuth } from '../src/hooks/useAuth';
 import { toast } from 'sonner';
 import { cardStorage } from '../src/utils/cardStorage';
-import { getIconByName } from '../src/utils/iconMapping';
-import { FaSync } from 'react-icons/fa';
 
 /**
- * Ai企业获客盈利系统主页面
+ * 图标映射表
+ * 将数据库中的图标名称映射到实际的Lucide图标组件
+ */
+const iconMap: Record<string, any> = {
+  FileText,
+  Video,
+  BookOpen,
+  Search,
+  Image,
+  Mic,
+  Volume2,
+  TrendingUp,
+  Edit,
+  User,
+  BarChart3,
+  Target
+};
+
+/**
+ * CATAIT智媒体运营工具主页面
  * 1:1还原设计稿的UI界面
  */
 export default function Home() {
   const router = useRouter();
+  const [cards, setCards] = useState<FeatureCardData[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home');
-  
-  // 使用优化的身份验证钩子
-  const { user, logout, isAuthenticated, loading: authLoading } = useOptimizedAuth();
-  
-  // 使用优化的卡片管理钩子
-  const { 
-    cards, 
-    loading: cardsLoading, 
-    error: cardsError,
-    refreshCards,
-    isSyncing
-  } = useOptimizedCards(user?.id);
+  const { user, logout } = useAuth();
 
-  // 合并加载状态
-  const loading = authLoading || cardsLoading;
+  // 从API或localStorage加载卡片数据
+  const loadCards = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      console.log('🔍 开始加载卡片数据');
+      console.log('🔍 Token存在:', !!token);
+      console.log('🔍 Token内容:', token ? token.substring(0, 20) + '...' : 'null');
+      console.log('🔍 用户登录状态:', !!user);
+      console.log('🔍 用户信息:', user);
+      
+      // 如果有token，尝试从API获取数据
+      if (token) {
+        try {
+          console.log('📡 尝试从API获取卡片数据...');
+          const response = await fetch('/api/cards', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+
+          console.log('📡 API响应状态:', response.status);
+          if (response.ok) {
+            const result = await response.json();
+            console.log('📡 API响应数据:', result);
+            
+            if (result.success && result.data) {
+              // 转换API数据格式为组件需要的格式
+              const formattedCards = result.data.map((card: any) => ({
+                id: card.id,
+                name: card.name,
+                desc: card.desc,
+                icon: iconMap[card.iconName] || FileText,
+                bgColor: card.bgColor
+              }));
+              console.log('✅ API数据转换完成，卡片数量:', formattedCards.length);
+              setCards(formattedCards);
+              return; // 成功获取API数据，直接返回
+            }
+          } else {
+            console.log('❌ API请求失败:', response.status);
+          }
+        } catch (apiError) {
+          // API获取失败，静默回退到localStorage
+          console.log('❌ API获取失败，使用本地数据:', apiError);
+        }
+      } else {
+        console.log('⚠️ 没有token，使用本地数据');
+      }
+      
+      // 如果没有token或API失败，使用localStorage数据
+      console.log('💾 从localStorage获取卡片数据...');
+      const savedCards = cardStorage.getCards();
+      console.log('💾 localStorage卡片数量:', savedCards.length);
+      setCards(savedCards);
+    } catch (error) {
+      // 静默处理加载错误，使用默认数据
+      console.log('❌ 加载卡片数据出错:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCards();
+  }, []);
 
   /**
    * 处理后台管理按钮点击
@@ -57,47 +132,13 @@ export default function Home() {
   };
 
   /**
-   * 处理刷新按钮点击
+   * 刷新卡片数据
    */
-  const handleRefresh = () => {
-    refreshCards();
-    toast.success('数据已刷新');
-  };
-
-  /**
-   * 处理登出
-   */
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast.success('已退出登录');
-      router.push('/login');
-    } catch (error) {
-      toast.error('退出登录失败');
-    }
-  };
-
-  /**
-   * 处理卡片点击事件
-   * 跳转到对应的工作流页面
-   * @param card - 被点击的卡片数据
-   * @param index - 卡片索引
-   */
-  const handleCardClick = (card: FeatureCardData, index: number) => {
-    console.log('🎯 卡片被点击:', card);
-    
-    // 如果卡片有ID，跳转到工作流页面
-    if (card.id) {
-      console.log('🚀 跳转到工作流页面:', `/workflow/${card.id}`);
-      router.push(`/workflow/${card.id}`);
-    } else {
-      console.warn('⚠️ 卡片没有ID，无法跳转');
-      toast.error('该卡片暂未配置工作流');
-    }
+  const refreshCards = () => {
+    loadCards();
   };
 
   // 监听页面焦点，当从后台管理页面返回时刷新数据
-  /*
   useEffect(() => {
     const handleFocus = () => {
       refreshCards();
@@ -108,39 +149,13 @@ export default function Home() {
       window.removeEventListener('focus', handleFocus);
     };
   }, []);
-  */
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">
-            {authLoading ? '验证身份中...' : '加载数据中...'}
-          </p>
-          {isSyncing && (
-            <p className="text-sm text-blue-500 mt-2">
-              <FaSync className="inline animate-spin mr-1" />
-              后台同步中...
-            </p>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // 显示错误信息
-  if (cardsError) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">{cardsError}</p>
-          <button 
-            onClick={handleRefresh}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            重试
-          </button>
+          <p className="text-gray-600">加载中...</p>
         </div>
       </div>
     );
@@ -156,48 +171,7 @@ export default function Home() {
           <>
             <SearchBar />
             <HeroBanner />
-            <div className="px-4 mb-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-gray-900">功能卡片</h2>
-                <div className="flex items-center space-x-2">
-                  {isSyncing && (
-                    <span className="text-sm text-blue-500 flex items-center">
-                      <FaSync className="animate-spin mr-1" />
-                      同步中
-                    </span>
-                  )}
-                  <button
-                    onClick={handleRefresh}
-                    className="p-2 text-gray-500 hover:text-blue-500 transition-colors"
-                    title="刷新数据"
-                  >
-                    <FaSync className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                  </button>
-                  
-                  {/* 敏感操作：管理功能 */}
-                  <SensitiveOperationGuard 
-                    operation={SensitiveOperation.MANAGE_CARDS}
-                    fallback={
-                      <div className="text-sm text-gray-500">管理功能需要特殊权限</div>
-                    }
-                  >
-                    <button
-                      onClick={() => {
-                        // 这里可以添加管理功能
-                        toast.info('管理功能开发中...');
-                      }}
-                      className="flex items-center px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                    >
-                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4" />
-                      </svg>
-                      管理
-                    </button>
-                  </SensitiveOperationGuard>
-                </div>
-              </div>
-            </div>
-            <FeatureGrid cards={cards} onCardClick={handleCardClick} />
+            <FeatureGrid cards={cards} />
           </>
         );
       case 'discover':
@@ -229,7 +203,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-50 flex flex-col">
         <div className="fixed top-0 left-0 right-0 z-50">
           <Header 
-            title="Ai企业获客盈利系统" 
+            title="CATAIT智媒体运营工具" 
             onAdminClick={handleAdminClick}
           />
         </div>
