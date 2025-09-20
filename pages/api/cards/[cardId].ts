@@ -1,22 +1,51 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import mysql from 'mysql2/promise';
+import { verifyToken, extractTokenFromHeader } from '../../../src/utils/auth';
 
 /**
  * 获取指定卡片的详细信息API
  * 包括workflow_id和api_token等信息
+ * 需要用户认证
  */
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: '方法不允许' });
+    return res.status(405).json({ success: false, error: '方法不允许' });
+  }
+
+  // 验证用户认证
+  const authHeader = req.headers.authorization;
+  const token = extractTokenFromHeader(authHeader);
+  
+  if (!token) {
+    return res.status(401).json({
+      success: false,
+      error: '未提供认证令牌'
+    });
+  }
+
+  try {
+    // 验证令牌有效性
+    const decoded = verifyToken(token);
+    if (!decoded || !decoded.userId) {
+      return res.status(401).json({
+        success: false,
+        error: '无效的认证令牌'
+      });
+    }
+  } catch (authError) {
+    return res.status(401).json({
+      success: false,
+      error: '认证失败'
+    });
   }
 
   const { cardId } = req.query;
 
   if (!cardId || typeof cardId !== 'string') {
-    return res.status(400).json({ error: '无效的卡片ID' });
+    return res.status(400).json({ success: false, error: '无效的卡片ID' });
   }
 
   try {
@@ -40,7 +69,7 @@ export default async function handler(
     const cards = rows as any[];
     
     if (cards.length === 0) {
-      return res.status(404).json({ error: '卡片不存在或已禁用' });
+      return res.status(404).json({ success: false, error: '卡片不存在或已禁用' });
     }
 
     const card = cards[0];
@@ -48,6 +77,7 @@ export default async function handler(
     // 检查必要的工作流信息
     if (!card.workflow_id || !card.api_token) {
       return res.status(400).json({ 
+        success: false,
         error: '卡片工作流配置不完整',
         details: {
           hasWorkflowId: !!card.workflow_id,
@@ -73,6 +103,7 @@ export default async function handler(
   } catch (error) {
     console.error('获取卡片信息失败:', error);
     res.status(500).json({ 
+      success: false,
       error: '服务器内部错误',
       details: process.env.NODE_ENV === 'development' ? error : undefined
     });
